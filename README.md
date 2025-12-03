@@ -99,6 +99,13 @@ Turn up each day, do your five, keep it moving. Consistency beats intensity.
 
 Good luck with your study — and have fun with it. 🙌
 
+
+
+## To do list
+- Add Titled Sections for user sentences, allowing dragging of sections, sentences.
+- When clicking Color Paelte highlighter need to unclude a text weight 800, also need a 'remove' styling option
+- Much later: Add a 'Cram' flashcard feature for Grammar points utilising the user sentences. Should be able to select 'seen' 'not seen' 'JLPTN_ level' 'Custom selection' and 'How many examples from each grammar point', basic Right or Wrong answers with JP Sentence on front, if Wrong then put card back in deck and reshuffle until deck is depleted.
+
 ---
 
 ## Credit / Disclaimer
