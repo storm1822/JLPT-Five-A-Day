@@ -79,6 +79,7 @@ A few practical toggles live in the main settings menu, including:
 - **Show Study Log** (hide the heatmap entirely if you don’t want it)
 - **Hide English by default** (your default choice when opening sentence dropdowns)
 - **Emoji Score System** (optional “tiny progress” tracker per grammar point)
+🌑🌘🌗🌖🌝🌔🌓🌒💫⭐🌟🌌🌃🌆🌇☁️🌥️🌤️🌞
 
 ### Star system ⭐
 A simple “mark as seen” flag—use it as a quick visual cue when browsing big lists, or when a point comes back around later.
