@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>JLPT Grammar Daily Scheduler</title>
   <style>
     :root{
@@ -11,16 +12,15 @@
       --font-main:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
       --shadow-soft:0 18px 40px rgba(0,0,0,.55);
 
-      /* Heatmap theme (overridden by palette) */
-      --hm-fill: rgba(56,189,248,.55);
-      --hm-border: rgba(56,189,248,.75);
-      --hm-empty-fill: rgba(2,6,23,.22);
-      --hm-empty-border: rgba(148,163,184,.22);
-      --hm-out-border: transparent;
+      /* Heatmap sizing (computed dynamically too) */
       --hm-cell: 12px;
-      --hm-gap: 4px;
+      --hm-gap: 3px;
+      --hm-border: rgba(34,197,94,.88);
+      --hm-fill: rgba(34,197,94,.55);
     }
+
     *{box-sizing:border-box}
+    html,body{max-width:100%;overflow-x:hidden}
     body{
       margin:0;padding:0;
       font-family:var(--font-main);
@@ -64,6 +64,8 @@
       cursor:pointer;
       display:inline-flex;align-items:center;gap:.25rem;
       transition:all .15s ease;
+      user-select:none;
+      -webkit-tap-highlight-color: transparent;
     }
     .chip-btn.primary{border-color:var(--accent);color:#e0f2fe}
     .chip-btn.icon-only{padding-inline:.4rem;width:1.8rem;justify-content:center}
@@ -81,6 +83,8 @@
       padding:.25rem .6rem;cursor:pointer;
       display:inline-flex;align-items:center;justify-content:center;
       transition:all .15s ease;
+      user-select:none;
+      -webkit-tap-highlight-color: transparent;
     }
     .settings-gear-btn:hover{
       border-color:var(--accent);
@@ -97,6 +101,7 @@
       cursor:pointer;color:#0f172a;
       font-weight:600;
       transition:all .2s cubic-bezier(.4,0,.2,1);
+      -webkit-tap-highlight-color: transparent;
     }
     .level-filter-btn.ALL{background:linear-gradient(135deg,#e5e7eb,#9ca3af)}
     .level-filter-btn.N5{background:linear-gradient(135deg,#bbf7d0,#22c55e)}
@@ -125,6 +130,7 @@
       padding:1.1rem 1.4rem 1.4rem;
       box-shadow:var(--shadow-soft);
       border:1px solid rgba(15,23,42,.95);
+      overflow:hidden; /* prevents any internal horizontal scroll */
     }
     .meta-row{
       display:flex;flex-wrap:wrap;justify-content:space-between;
@@ -173,7 +179,7 @@
       transition:max-height .4s cubic-bezier(.4,0,.2,1),padding .2s ease;
       padding:0 1.2rem;
     }
-    .level-body.expanded{max-height:2000px;padding:1rem 1.2rem 1.2rem}
+    .level-body.expanded{max-height:3000px;padding:1rem 1.2rem 1.2rem}
 
     /* Grammar cards */
     .grammar-item{
@@ -191,9 +197,11 @@
       box-shadow:0 4px 16px rgba(56,189,248,.3);
       border-color:rgba(56,189,248,.6);
     }
+
     .grammar-main-area{
       display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;
       cursor:pointer;
+      -webkit-tap-highlight-color: transparent;
     }
     .grammar-info{flex:1;display:flex;flex-direction:column;gap:.2rem;min-width:0}
     .grammar-main{
@@ -204,24 +212,90 @@
       overflow-wrap:anywhere;word-break:break-word;
     }
     .grammar-main a{color:inherit;text-decoration:none}
-    .grammar-main a:hover{text-decoration:underline;color:var(--accent)}
+    .grammar-main a:hover{color:inherit;text-decoration:underline}
+
     .extra-link{
       width:1rem;height:1rem;display:inline-flex;align-items:center;justify-content:center;
       color:var(--accent);opacity:.8;flex-shrink:0;text-decoration:none;
     }
     .extra-link:hover{opacity:1}
+
     .grammar-meaning{
       font-size:1.02rem;color:#e5e7eb;line-height:1.5;
       white-space:normal;overflow:visible;text-overflow:unset;
       overflow-wrap:anywhere;word-break:break-word;
     }
-    .grammar-right-controls{display:flex;align-items:center;gap:.5rem;flex-shrink:0;user-select:none}
+
+    .grammar-right-controls{display:flex;align-items:center;gap:.45rem;flex-shrink:0;user-select:none}
+
+    /* Score UI (border/arrows only when editing) */
+    body.no-scores .score-wrap{display:none !important;}
+    .score-wrap{
+      display:inline-flex;
+      align-items:center;
+      gap:.25rem;
+      padding:0;
+      border:none;
+      background:transparent;
+      border-radius:999px;
+      line-height:1;
+    }
+    .score-emoji{
+      font-size:1.05rem;
+      cursor:pointer;
+      user-select:none;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      width:1.3rem;
+      height:1.3rem;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .score-arrow{
+      display:none;
+      border:none;
+      background:transparent;
+      color:rgba(148,163,184,.85);
+      font-size:1.05rem;
+      cursor:pointer;
+      padding:.05rem .15rem;
+      line-height:1;
+      user-select:none;
+      opacity:.9;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .score-wrap.editing{
+      padding:.14rem .35rem;
+      border:1px solid rgba(148,163,184,.4);
+      background:rgba(2,6,23,.35);
+    }
+    .score-wrap.editing .score-arrow{display:inline-flex;}
+    .score-arrow:disabled{opacity:.25;cursor:default}
+    .score-arrow:not(:disabled):hover{color:var(--accent)}
+
     .star-toggle{
       cursor:pointer;font-size:1.25rem;color:#4b5563;
       transition:color .15s ease,transform .15s ease;
+      -webkit-tap-highlight-color: transparent;
     }
     .star-toggle:hover{transform:scale(1.1);color:#facc15}
     .star-toggle.seen{color:#facc15;text-shadow:0 0 8px rgba(250,204,21,.6)}
+
+    /* LEVEL-COLOURED TITLES (Daily + View All) */
+    .level-N5 .grammar-main, .level-N5 .grammar-main a,
+    .level-N5 .viewall-item-title, .level-N5 .viewall-item-title a { color:#22c55e; }
+
+    .level-N4 .grammar-main, .level-N4 .grammar-main a,
+    .level-N4 .viewall-item-title, .level-N4 .viewall-item-title a { color:#3b82f6; }
+
+    .level-N3 .grammar-main, .level-N3 .grammar-main a,
+    .level-N3 .viewall-item-title, .level-N3 .viewall-item-title a { color:#f97316; }
+
+    .level-N2 .grammar-main, .level-N2 .grammar-main a,
+    .level-N2 .viewall-item-title, .level-N2 .viewall-item-title a { color:#ef4444; }
+
+    .level-N1 .grammar-main, .level-N1 .grammar-main a,
+    .level-N1 .viewall-item-title, .level-N1 .viewall-item-title a { color:#a855f7; }
 
     /* Example sentences editor */
     .notes-section{
@@ -231,15 +305,19 @@
       cursor:default;
     }
     .notes-list{display:flex;flex-direction:column;gap:.15rem}
+
+    /* dashed separator per pair + side-by-side */
     .note-row{
       padding:.35rem .25rem;
       border-top:1px dashed rgba(148,163,184,.35);
-      display:flex;
-      flex-direction:column;
-      gap:.25rem;
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:.45rem;
+      align-items:start;
       position:relative;
     }
     .note-row:first-child{border-top:none}
+
     .note-field{
       width:100%;
       border:1px solid rgba(148,163,184,.45);
@@ -262,10 +340,20 @@
       padding:.15rem 0;
       border-radius:0;
     }
-    .note-field:empty:before{
+
+    /* Placeholders ONLY when editable (stops hints showing in read mode) */
+    .note-field[contenteditable="true"]:empty:before{
       content:attr(data-placeholder);
       color:rgba(148,163,184,.68);
     }
+
+    /* Hide English (keep same layout/width, no reflow) */
+    .notes-section.en-hidden .note-field.note-en{
+      visibility:hidden;
+      pointer-events:none;
+    }
+
+    /* bottom-left controls */
     .notes-footer{
       display:flex;
       align-items:center;
@@ -273,6 +361,7 @@
       gap:.35rem;
       margin-top:.35rem;
       padding-left:.15rem;
+      flex-wrap:wrap;
     }
     .notes-icon-btn{
       border:none;background:transparent;cursor:pointer;
@@ -281,9 +370,16 @@
       padding:.05rem .25rem;
       transition:color .2s ease, transform .15s ease;
       user-select:none;
+      -webkit-tap-highlight-color: transparent;
     }
     .notes-icon-btn:hover{color:var(--accent);transform:translateY(-.5px)}
     .notes-icon-btn.active{color:#3b82f6;font-weight:700}
+
+    /* EN toggle states */
+    .notes-en-toggle{font-weight:800;letter-spacing:.06em;font-size:.85rem}
+    .notes-en-toggle.showing{color:#3b82f6;}
+    .notes-en-toggle:not(.showing){color:rgba(148,163,184,.75);}
+
     .notes-add-btn{
       border-radius:999px;border:1px solid rgba(148,163,184,.65);
       background:rgba(15,23,42,.9);
@@ -292,17 +388,38 @@
       padding:.15rem .55rem;
       cursor:pointer;
       display:inline-flex;align-items:center;gap:.25rem;
+      user-select:none;
+      -webkit-tap-highlight-color: transparent;
     }
+
     .note-delete-btn{
       position:absolute;right:.2rem;top:.2rem;
       font-size:1rem;color:#ef4444;cursor:pointer;user-select:none;
       padding:.05rem .35rem;
+      -webkit-tap-highlight-color: transparent;
     }
     .note-delete-btn:hover{color:#f87171}
+
     .notes-empty-hint{
       padding:.35rem .25rem;
       color:rgba(148,163,184,.9);
       font-size:.85rem;
+    }
+
+    /* Notes import modal textarea */
+    .notes-import-textarea{
+      width:100%;
+      min-height:180px;
+      max-height:45vh;
+      resize:vertical;
+      padding:.55rem .6rem;
+      border-radius:.6rem;
+      background:#0f172a;
+      border:1px solid rgba(148,163,184,.4);
+      color:#e5e7eb;
+      outline:none;
+      margin-top:.6rem;
+      line-height:1.35;
     }
 
     /* Modals */
@@ -312,6 +429,7 @@
       display:none;
       align-items:center;justify-content:center;
       z-index:30;
+      padding:1rem;
     }
     .modal-backdrop.show{display:flex}
     .modal{
@@ -335,29 +453,26 @@
       color:var(--text-main);
       font-size:.8rem;padding:.3rem .6rem;cursor:pointer;
       display:inline-flex;align-items:center;gap:.3rem;
+      user-select:none;
+      -webkit-tap-highlight-color: transparent;
     }
     .modal-btn.primary{border-color:var(--accent);color:#e0f2fe}
     .modal-hint{font-size:.75rem;color:rgba(148,163,184,.92);margin-top:.5rem;line-height:1.35}
-
-    /* settings rows */
     .settings-section-title{
-      margin-top:.85rem;
+      margin-top:.9rem;
       font-size:.72rem;
       text-transform:uppercase;
       letter-spacing:.12em;
-      color:rgba(148,163,184,.95);
+      color:rgba(148,163,184,.9);
     }
     .settings-row{
       display:flex;
       align-items:center;
       gap:.55rem;
-      margin-top:.55rem;
+      margin-top:.6rem;
       user-select:none;
     }
-    .settings-row input[type="checkbox"]{
-      width:1.05rem;height:1.05rem;
-      accent-color: var(--accent);
-    }
+    .settings-row input{transform:translateY(1px)}
 
     /* View All modal */
     #viewAllModal .modal{
@@ -379,6 +494,7 @@
     #viewAllModal .modal::-webkit-scrollbar-thumb:hover{
       background:rgba(56,189,248,0.35);
     }
+
     .viewall-title-row{display:flex;align-items:center;gap:.8rem;flex-wrap:wrap}
     .viewall-filters{display:flex;align-items:center;gap:.35rem}
     .viewall-filter-label{
@@ -395,9 +511,12 @@
       line-height:1;
       border-bottom:2px solid transparent;
       transition:color .15s ease, border-color .15s ease;
+      user-select:none;
+      -webkit-tap-highlight-color: transparent;
     }
     .viewall-starfilter-btn:hover{color:#facc15}
     .viewall-starfilter-btn.active{border-bottom-color:#22c55e;color:#facc15}
+
     .viewall-search{
       width:100%;
       padding:.45rem .6rem;
@@ -430,12 +549,13 @@
     .viewall-item-header{
       display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;
       cursor:pointer;
+      -webkit-tap-highlight-color: transparent;
     }
-    .viewall-item-title{font-weight:700;font-size:.98rem;line-height:1.35;overflow-wrap:anywhere;word-break:break-word}
+    .viewall-item-title{font-weight:900;font-size:.98rem;line-height:1.35;overflow-wrap:anywhere;word-break:break-word}
     .viewall-item-title a{color:inherit;text-decoration:none}
-    .viewall-item-title a:hover{color:var(--accent);text-decoration:underline}
+    .viewall-item-title a:hover{color:inherit;text-decoration:underline}
     .viewall-item-meaning{color:rgba(148,163,184,.95);font-size:.88rem;line-height:1.4;margin-top:.15rem;overflow-wrap:anywhere;word-break:break-word}
-    .viewall-item-controls{display:flex;align-items:center;gap:.6rem;flex-shrink:0;user-select:none}
+    .viewall-item-controls{display:flex;align-items:center;gap:.55rem;flex-shrink:0;user-select:none}
     .viewall-toggle{font-size:1.15rem;color:rgba(255,255,255,.22)}
     .viewall-toggle.open{color:rgba(255,255,255,.55)}
     .viewall-noresults{
@@ -448,206 +568,204 @@
       background:rgba(2,6,23,.28);
     }
 
-    /* Heatmap panel */
+    /* Study Log (Heatmap) */
     .heatmap-panel{
-      margin-top:1.1rem;
-      background:radial-gradient(circle at top left,rgba(15,23,42,.9) 0%,rgba(15,23,42,.96) 40%,#020617 100%);
-      border-radius:1.25rem;
-      padding:1.1rem 1.4rem 1.2rem;
-      box-shadow:var(--shadow-soft);
-      border:1px solid rgba(15,23,42,.95);
-      position:relative;
+      margin-top:1.15rem;
+      padding-top:1rem;
+      border-top:1px solid rgba(148,163,184,.2);
     }
     .hm-header{
       display:flex;
       align-items:center;
       justify-content:space-between;
       gap:.75rem;
-      margin-bottom:.6rem;
+      margin-bottom:.55rem;
     }
     .hm-title{
       font-size:1rem;
-      font-weight:750;
-      letter-spacing:.06em;
+      font-weight:900;
+      letter-spacing:.08em;
       text-transform:uppercase;
-      color:#e5e7eb;
-      display:flex;
-      align-items:center;
-      gap:.55rem;
+      user-select:none;
     }
     .hm-grid-wrap{
       width:100%;
-      overflow-x:auto;
-      padding:.35rem .15rem .55rem;
-      scrollbar-color: rgba(148,163,184,0.28) transparent;
+      overflow:hidden; /* no scrollbars */
     }
-    .hm-grid-wrap::-webkit-scrollbar{height:10px}
-    .hm-grid-wrap::-webkit-scrollbar-thumb{
-      background:rgba(148,163,184,0.2);
-      border-radius:999px;
-      border:2px solid transparent;
-      background-clip:padding-box;
+    .hm-year-wrap{
+      width:100%;
+      overflow:hidden; /* no scrollbars */
     }
-    .hm-grid-wrap::-webkit-scrollbar-thumb:hover{background:rgba(56,189,248,0.28)}
-
-    /* Year grid */
-    .hm-grid{
-      display:grid;
-      grid-auto-flow:column;
-      grid-template-rows:repeat(7, var(--hm-cell));
-      grid-template-columns:repeat(var(--hm-weeks, 53), var(--hm-cell));
+    .hm-month-labels{
+      margin:.15rem 0 .5rem;
+      display:none;
       gap:var(--hm-gap);
-      align-content:start;
-      justify-content:start;
-      min-width:fit-content;
+      align-items:end;
+      user-select:none;
+      width:100%;
+      overflow:hidden;
     }
-
-    /* Month view layout */
-    .hm-months{
-      display:grid;
-      grid-template-columns:repeat(auto-fit, minmax(210px, 1fr));
-      gap:.9rem .9rem;
-      align-items:start;
-      justify-content:stretch;
-    }
-    .hm-month{
-      border:1px solid rgba(148,163,184,.18);
-      background:rgba(2,6,23,.22);
-      border-radius:1rem;
-      padding:.75rem .75rem .85rem;
-      box-shadow:0 2px 12px rgba(0,0,0,.2) inset;
-    }
-    .hm-month-title{
-      font-size:.78rem;
-      letter-spacing:.12em;
+    .hm-month-label{
+      font-size:.7rem;
+      color:rgba(148,163,184,.9);
       text-transform:uppercase;
-      color:rgba(226,232,240,.88);
-      margin-bottom:.55rem;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
+      letter-spacing:.06em;
+      opacity:.9;
+      transform:translateY(1px);
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      padding-left:2px;
     }
-    .hm-month-grid{
+    .hm-grid{
+      width:100%;
       display:grid;
-      grid-auto-flow:column;
-      grid-template-rows:repeat(7, var(--hm-cell));
-      grid-template-columns:repeat(var(--hm-weeks, 6), var(--hm-cell));
       gap:var(--hm-gap);
+      grid-auto-flow:column;
+      grid-template-rows: repeat(7, var(--hm-cell));
       align-content:start;
       justify-content:start;
-      min-width:fit-content;
+      overflow:hidden; /* no scrollbars */
+      padding:2px;
     }
-
     .hm-cell-btn{
-      width:var(--hm-cell);
-      height:var(--hm-cell);
+      width:var(--hm-cell); height:var(--hm-cell);
       border-radius:3px;
-      border:1px solid var(--hm-empty-border);
-      background:var(--hm-empty-fill);
-      padding:0;
+      border:1px solid rgba(148,163,184,.18);
+      background:rgba(2,6,23,.25);
       cursor:pointer;
-      transition:transform .08s ease, border-color .08s ease, background .08s ease;
+      padding:0;
+      -webkit-tap-highlight-color: transparent;
+      transition:transform .08s ease, border-color .15s ease, background .15s ease;
     }
-    .hm-cell-btn:hover{transform:translateY(-1px);border-color:rgba(56,189,248,.55)}
-    .hm-cell-btn:focus-visible{
-      outline:2px solid rgba(56,189,248,.7);
-      outline-offset:2px;
-    }
-    .hm-cell-btn.visited{
-      background:var(--hm-fill);
-      border-color:var(--hm-border);
-      box-shadow:0 0 0 1px rgba(15,23,42,.6) inset;
-    }
+    .hm-cell-btn:hover{transform:translateY(-.5px); border-color:rgba(56,189,248,.45)}
     .hm-cell-btn.out{
+      border-color:transparent;
       background:transparent;
-      border-color:var(--hm-out-border);
       cursor:default;
       pointer-events:none;
     }
+    .hm-cell-btn.visited{
+      border-color:var(--hm-border);
+      background:var(--hm-fill);
+    }
     .hm-cell-btn.today{
-      box-shadow:0 0 0 2px rgba(250,204,21,.65), 0 0 0 1px rgba(15,23,42,.65) inset;
-      border-color:rgba(250,204,21,.65);
+      box-shadow:0 0 0 2px rgba(56,189,248,.28);
+    }
+    /* “fat left side” month boundary marker */
+    .hm-cell-btn.month-boundary{
+      box-shadow: inset 3px 0 0 rgba(255,255,255,.22);
+    }
+    .hm-cell-btn.month-boundary.visited{
+      box-shadow: inset 3px 0 0 rgba(255,255,255,.35);
     }
 
     .hm-year-controls{
-      margin-top:.4rem;
       display:flex;
       align-items:center;
       justify-content:center;
-      gap:.5rem;
+      gap:.6rem;
+      margin-top:.6rem;
       user-select:none;
     }
     .hm-year-label{
-      font-weight:750;
+      font-weight:900;
       letter-spacing:.08em;
-      color:rgba(226,232,240,.95);
-      padding:.1rem .6rem;
-      min-width:5rem;
+      text-transform:uppercase;
+      color:#e5e7eb;
+      padding:.15rem .45rem;
+      border-radius:.5rem;
+      border:1px solid rgba(148,163,184,.25);
+      background:rgba(2,6,23,.25);
+      min-width:4.6rem;
       text-align:center;
     }
-
     .hm-stats{
-      margin-top:.75rem;
       display:flex;
       flex-wrap:wrap;
-      align-items:center;
-      justify-content:center;
-      gap:1.25rem 1.75rem;
-      color:rgba(226,232,240,.92);
-      font-size:.92rem;
+      gap:.8rem 1.2rem;
+      margin-top:.7rem;
+      padding-top:.65rem;
+      border-top:1px dashed rgba(148,163,184,.28);
+      color:rgba(148,163,184,.95);
+      font-size:.85rem;
+      user-select:none;
     }
-    .hm-stat-label{color:rgba(148,163,184,.95)}
-    .hm-stat-value{color:#e5e7eb;font-weight:750}
-    .hm-total{position:relative;cursor:help}
-
-    /* Tooltips (fixed + positioned at mouse) */
-    .hm-tooltip{
-      position:fixed;
-      z-index:60;
-      display:none;
-      max-width:min(520px, calc(100vw - 24px));
-      padding:.55rem .7rem;
-      border-radius:.6rem;
-      background:rgba(2,6,23,.96);
-      border:1px solid rgba(56,189,248,.35);
-      box-shadow:0 16px 40px rgba(0,0,0,.75);
+    .hm-stat-label{
+      text-transform:uppercase;
+      letter-spacing:.10em;
+      font-size:.72rem;
+      color:rgba(148,163,184,.85);
+      margin-right:.35rem;
+    }
+    .hm-stat-value{
+      font-weight:900;
       color:#e5e7eb;
-      font-size:.86rem;
-      line-height:1.35;
-      pointer-events:none;
-      white-space:pre-wrap;
     }
-    .hm-tooltip.show{display:block}
 
-    /* Heatmap palette options */
+    /* Heatmap palette selector */
     .hm-palette-options{
-      margin-top:.55rem;
       display:flex;
       flex-wrap:wrap;
       gap:.45rem;
+      margin-top:.55rem;
     }
     .hm-palette-btn{
-      border-radius:999px;
-      border:1px solid rgba(148,163,184,.45);
-      background:rgba(15,23,42,.9);
-      color:rgba(226,232,240,.95);
-      font-size:.75rem;
-      padding:.2rem .6rem;
-      cursor:pointer;
-      display:inline-flex;
+      display:flex;
       align-items:center;
-      gap:.45rem;
+      gap:.5rem;
+      border-radius:.7rem;
+      border:1px solid rgba(148,163,184,.28);
+      background:rgba(15,23,42,.75);
+      color:#e5e7eb;
+      font-size:.82rem;
+      padding:.35rem .55rem;
+      cursor:pointer;
+      user-select:none;
+      -webkit-tap-highlight-color: transparent;
     }
-    .hm-palette-btn:hover{border-color:rgba(56,189,248,.5)}
+    .hm-palette-btn:hover{border-color:rgba(56,189,248,.45)}
     .hm-palette-btn.active{
-      border-color:rgba(56,189,248,.85);
-      box-shadow:0 0 0 1px rgba(15,23,42,.7) inset;
+      border-color:rgba(56,189,248,.65);
+      box-shadow:0 0 0 1px rgba(56,189,248,.25);
     }
     .hm-palette-swatch{
-      width:.85rem;height:.85rem;border-radius:3px;
-      border:1px solid rgba(148,163,184,.45);
-      background:rgba(148,163,184,.15);
+      width:1.1rem;height:1.1rem;border-radius:.35rem;
+      border:2px solid var(--hm-border);
+      background:var(--hm-fill);
+      box-shadow:0 0 0 1px rgba(0,0,0,.35) inset;
       flex-shrink:0;
+    }
+
+    /* Tooltip (mouse anchored) */
+    .hm-tooltip{
+      position:fixed;
+      left:0; top:0;
+      transform:translate3d(0,0,0);
+      padding:.35rem .5rem;
+      border-radius:.55rem;
+      border:1px solid rgba(148,163,184,.35);
+      background:rgba(2,6,23,.92);
+      color:#e5e7eb;
+      font-size:.78rem;
+      pointer-events:none;
+      opacity:0;
+      z-index:50;
+      box-shadow:0 14px 30px rgba(0,0,0,.65);
+      max-width:min(280px, 80vw);
+      overflow-wrap:anywhere;
+    }
+    .hm-tooltip.show{opacity:1}
+
+    @media (max-width:640px){
+      .page{padding:1.15rem .9rem 2.5rem}
+      .header-bar{margin:-1.15rem -.9rem 1rem;padding:.8rem .9rem .75rem}
+      .panel{padding:1rem 1rem 1.1rem}
+      .level-heading{padding:.85rem 1rem}
+      .level-body{padding:0 1rem}
+      .level-body.expanded{padding:1rem 1rem 1.1rem}
+      .grammar-item{padding:.9rem .9rem}
+      .note-row{grid-template-columns:1fr 1fr; gap:.4rem}
     }
 
     @media (prefers-reduced-motion:reduce){
@@ -690,41 +808,52 @@
         <div><span class="meta-label">View</span> <span class="meta-value" id="infoDate"></span></div>
         <div><span class="meta-label">Per level</span> <span class="meta-value">5 items</span></div>
       </div>
+
       <div id="output"></div>
+
+      <!-- Study Log (Heatmap) -->
+      <div id="heatmapPanel" class="heatmap-panel" hidden>
+        <div class="hm-header">
+          <div style="display:flex;align-items:center;gap:.55rem;flex-wrap:wrap">
+            <div class="hm-title">Study Log</div>
+            <button id="openHeatmapSettingsBtn" class="settings-gear-btn" title="Study Log settings" style="padding:.18rem .55rem;font-size:.9rem">⚙</button>
+          </div>
+          <div style="display:flex;align-items:center;gap:.4rem;flex-wrap:wrap">
+
+          </div>
+        </div>
+
+        <div class="hm-grid-wrap">
+          <div id="hmMonthLabels" class="hm-month-labels"></div>
+          <div id="hmGrid" class="hm-grid" aria-label="Study log heatmap"></div>
+        </div>
+
+        <div class="hm-year-controls">
+          <button id="hmPrevYearBtn" class="chip-btn icon-only" title="Previous year">‹</button>
+          <div id="hmYearLabel" class="hm-year-label">2025</div>
+          <button id="hmNextYearBtn" class="chip-btn icon-only" title="Next year">›</button>
+        </div>
+
+        <div id="hmStats" class="hm-stats">
+          <div id="hmFirstVisitWrap">
+            <span class="hm-stat-label">First Visit</span>
+            <span class="hm-stat-value" id="hmFirstVisitVal">—</span>
+          </div>
+          <div id="hmStreakWrap">
+            <span class="hm-stat-label">Streak</span>
+            <span class="hm-stat-value" id="hmStreakVal">0</span>
+          </div>
+          <div id="hmTotalWrap">
+            <span class="hm-stat-label">Total</span>
+            <span class="hm-stat-value" id="hmTotalVal">0</span>
+          </div>
+        </div>
+      </div>
     </main>
-
-    <!-- Heatmap / Study Log -->
-    <section id="heatmapPanel" class="heatmap-panel" aria-label="Study log heatmap">
-      <div class="hm-header">
-        <div class="hm-title">
-          <span>Study Log</span>
-        </div>
-        <button id="openHeatmapSettingsBtn" class="settings-gear-btn" title="Study log settings" aria-label="Study log settings">⚙</button>
-      </div>
-
-      <div class="hm-grid-wrap">
-        <!-- Year grid OR month view will be injected -->
-        <div id="heatmapHost"></div>
-      </div>
-
-      <div class="hm-year-controls" id="hmYearControls">
-        <button id="hmPrevYear" class="chip-btn icon-only" aria-label="Previous year">‹</button>
-        <div id="hmYearLabel" class="hm-year-label">2025</div>
-        <button id="hmNextYear" class="chip-btn icon-only" aria-label="Next year">›</button>
-      </div>
-
-      <div class="hm-stats" id="hmStatsRow">
-        <div id="hmFirstVisitStat"><span class="hm-stat-label">First Visit:</span> <span class="hm-stat-value" id="hmFirstVisitValue">—</span></div>
-        <div id="hmStreakStat"><span class="hm-stat-label">Streak:</span> <span class="hm-stat-value" id="hmStreakValue">0 days</span></div>
-        <div id="hmTotalStat" class="hm-total" tabindex="0">
-          <span class="hm-stat-label">Total:</span> <span class="hm-stat-value" id="hmTotalValue">0</span>
-        </div>
-      </div>
-
-      <div id="hmTooltip" class="hm-tooltip" role="tooltip" aria-hidden="true"></div>
-    </section>
-
   </div>
+
+  <!-- Global tooltip element -->
+  <div id="hmTooltip" class="hm-tooltip" role="tooltip"></div>
 
   <!-- View All modal -->
   <div id="viewAllModal" class="modal-backdrop">
@@ -758,11 +887,24 @@
         </div>
 
         <div class="settings-section-title">Study Log</div>
-        <label class="settings-row">
+        <label class="settings-row" for="toggleHeatmapVisible">
           <input id="toggleHeatmapVisible" type="checkbox" />
           <span>Show Study Log</span>
         </label>
 
+        <div class="settings-section-title">Notes</div>
+        <label class="settings-row" for="toggleHideEnglishNotes">
+          <input id="toggleHideEnglishNotes" type="checkbox" />
+          <span>Hide English by default</span>
+        </label>
+
+        <div class="settings-section-title">Scoring</div>
+        <label class="settings-row" for="toggleEmojiScores">
+          <input id="toggleEmojiScores" type="checkbox" />
+          <span>Use Emoji Score system?</span>
+        </label>
+
+        <div class="settings-section-title">Export / Import</div>
         <div class="modal-actions">
           <button id="exportDataBtn" class="modal-btn primary">⬇ Export JSON</button>
           <button id="importDataBtn" class="modal-btn">⬆ Import JSON</button>
@@ -772,7 +914,7 @@
     </div>
   </div>
 
-  <!-- Heatmap Settings modal -->
+  <!-- Study Log settings modal -->
   <div id="heatmapSettingsModalBackdrop" class="modal-backdrop">
     <div class="modal">
       <div class="modal-header">
@@ -781,36 +923,55 @@
       </div>
 
       <div class="modal-body">
-        <div class="modal-hint">
-          Boxes are counted only when you actually visit this page (today), or when you manually toggle a day in the heatmap.
-        </div>
-
-        <div class="settings-section-title">View</div>
-        <label class="settings-row">
-          <input id="hmMonthView" type="checkbox" />
-          <span>Month View</span>
-        </label>
-        <label class="settings-row">
-          <input id="hmShowMonthTitles" type="checkbox" />
-          <span>Show month titles (Jan, Feb…)</span>
-        </label>
-
-        <div class="settings-section-title">Stats row</div>
-        <label class="settings-row">
+        <div class="settings-section-title">Stats to show</div>
+        <label class="settings-row" for="hmShowFirstVisit">
           <input id="hmShowFirstVisit" type="checkbox" />
-          <span>Show First Visit</span>
+          <span>First Visit</span>
         </label>
-        <label class="settings-row">
+        <label class="settings-row" for="hmShowStreak">
           <input id="hmShowStreak" type="checkbox" />
-          <span>Show Streak</span>
+          <span>Streak</span>
         </label>
-        <label class="settings-row">
+        <label class="settings-row" for="hmShowTotal">
           <input id="hmShowTotal" type="checkbox" />
-          <span>Show Total</span>
+          <span>Total</span>
         </label>
 
-        <div class="settings-section-title">Colours</div>
+        <div class="settings-section-title">Month labels</div>
+        <label class="settings-row" for="hmShowMonthTitles">
+          <input id="hmShowMonthTitles" type="checkbox" />
+          <span>Show month titles (Jan, Feb, …)</span>
+        </label>
+
+        <div class="settings-section-title">Colour palette</div>
         <div id="hmPaletteOptions" class="hm-palette-options"></div>
+
+        <div class="modal-hint" style="margin-top:.7rem">
+          Days are only added automatically when you open the page on the real current day. You can also click boxes to toggle days on/off.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notes import modal -->
+  <div id="notesImportModalBackdrop" class="modal-backdrop">
+    <div class="modal" style="max-width:720px">
+      <div class="modal-header">
+        <div class="modal-title">Import Sentences</div>
+        <button id="closeNotesImportBtn" class="modal-close-btn" aria-label="Close">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="modal-hint">
+          Paste lines: odd lines are Japanese, even lines are English. If you paste Japanese-only lines, they will import as JP-only rows (blank EN).
+          Use <b>#text#</b> to highlight: it will colour that text using the current JLPT level colour.
+        </div>
+        <textarea id="notesImportTextarea" class="notes-import-textarea" placeholder="JP line 1&#10;EN line 1&#10;JP line 2&#10;EN line 2&#10;..."></textarea>
+
+        <div class="modal-actions">
+          <button id="applyNotesImportBtn" class="modal-btn primary">OK</button>
+          <button id="cancelNotesImportBtn" class="modal-btn">Cancel</button>
+        </div>
       </div>
     </div>
   </div>
@@ -1732,1396 +1893,1554 @@ N1,178,並み,nami,"As, On par with, Worthy of",https://bunpro.jp/grammar_points
 N1,179,に先駆けて,ni sakigakete,"First, Prior to, Pioneer, Ahead of",https://bunpro.jp/grammar_points/%E3%81%AB%E5%85%88%E9%A7%86%E3%81%91%E3%81%A6
 N1,180,を機に,o ki ni,"Opportunity, Occasion",https://bunpro.jp/grammar_points/%E3%82%92%E6%A9%9F%E3%81%AB
   </template>
-<script>
-  document.addEventListener("DOMContentLoaded", () => {
-    const LEVEL_ORDER = ["N5","N4","N3","N2","N1"];
-    const ITEMS_PER_DAY = 5;
-    const START_DATE = new Date("2025-01-01T00:00:00");
+  </template>
 
-    const LEVEL_COLORS = {
-      N5: "#22c55e",
-      N4: "#3b82f6",
-      N3: "#f97316",
-      N2: "#ef4444",
-      N1: "#a855f7"
-    };
+  <!-- safety: allow huge notes without clipping inside expanded sections -->
+  <style>
+    .level-body.expanded{max-height:200000px;}
+  </style>
 
-    const FILTER_KEY = "jlpt-active-filters";
-    const EXPAND_KEY = "jlpt-expanded-sections";
-    const DATA_KEY = "jlpt-user-data";
-    const HEATMAP_KEY = "jlpt-heatmap-state";
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const LEVEL_ORDER = ["N5","N4","N3","N2","N1"];
+      const ITEMS_PER_DAY = 5;
+      const START_DATE = new Date("2025-01-01T00:00:00");
 
-    const viewDateInput = document.getElementById("viewDate");
-    const prevBtn = document.getElementById("prevDayBtn");
-    const nextBtn = document.getElementById("nextDayBtn");
-    const todayBtn = document.getElementById("todayBtn");
-    const openCalendarBtn = document.getElementById("openCalendarBtn");
-    const infoDate = document.getElementById("infoDate");
-    const outputDiv = document.getElementById("output");
-    const filterButtons = document.querySelectorAll(".level-filter-btn");
+      const LEVEL_COLORS = {
+        N5: "#22c55e",
+        N4: "#3b82f6",
+        N3: "#f97316",
+        N2: "#ef4444",
+        N1: "#a855f7"
+      };
 
-    const openSettingsBtn = document.getElementById("openSettingsBtn");
-    const settingsModalBackdrop = document.getElementById("settingsModalBackdrop");
-    const closeSettingsBtn = document.getElementById("closeSettingsBtn");
-    const exportDataBtn = document.getElementById("exportDataBtn");
-    const importDataBtn = document.getElementById("importDataBtn");
-    const importFileInput = document.getElementById("importFileInput");
+      // Score emojis (max score 18). Kept your list order; removed ☀️ so 🌞 is the final “mastery” emoji.
+      const SCORE_EMOJIS = ["🌑","🌘","🌗","🌖","🌝","🌔","🌓","🌒","💫","⭐","🌟","🌌","🌃","🌆","🌇","☁️","🌥️","🌤️","🌞"];
+      const SCORE_MAX = 18;
 
-    const openViewAllBtn = document.getElementById("openViewAllBtn");
-    const viewAllModal = document.getElementById("viewAllModal");
-    const closeViewAllBtn = document.getElementById("closeViewAllBtn");
-    const viewAllContent = document.getElementById("viewAllContent");
-    const viewAllSearch = document.getElementById("viewAllSearch");
-    const viewAllFilterSeenBtn = document.getElementById("viewAllFilterSeen");
-    const viewAllFilterUnseenBtn = document.getElementById("viewAllFilterUnseen");
-    let viewAllStarFilter = null; // 'seen' | 'unseen' | null
+      const FILTER_KEY = "jlpt-active-filters";
+      const EXPAND_KEY = "jlpt-expanded-sections";
+      const DATA_KEY = "jlpt-user-data";
+      const HEATMAP_KEY = "jlpt-heatmap-state";
+      const GLOBAL_SETTINGS_KEY = "jlpt-global-settings";
 
-    // Heatmap DOM
-    const heatmapPanel = document.getElementById("heatmapPanel");
-    const heatmapHost = document.getElementById("heatmapHost");
-    const hmYearControls = document.getElementById("hmYearControls");
-    const hmPrevYearBtn = document.getElementById("hmPrevYear");
-    const hmNextYearBtn = document.getElementById("hmNextYear");
-    const hmYearLabel = document.getElementById("hmYearLabel");
+      // DOM
+      const viewDateInput = document.getElementById("viewDate");
+      const prevBtn = document.getElementById("prevDayBtn");
+      const nextBtn = document.getElementById("nextDayBtn");
+      const todayBtn = document.getElementById("todayBtn");
+      const openCalendarBtn = document.getElementById("openCalendarBtn");
+      const infoDate = document.getElementById("infoDate");
+      const outputDiv = document.getElementById("output");
+      const filterButtons = document.querySelectorAll(".level-filter-btn");
 
-    const openHeatmapSettingsBtn = document.getElementById("openHeatmapSettingsBtn");
-    const heatmapSettingsModalBackdrop = document.getElementById("heatmapSettingsModalBackdrop");
-    const closeHeatmapSettingsBtn = document.getElementById("closeHeatmapSettingsBtn");
+      // Settings modal
+      const openSettingsBtn = document.getElementById("openSettingsBtn");
+      const settingsModalBackdrop = document.getElementById("settingsModalBackdrop");
+      const closeSettingsBtn = document.getElementById("closeSettingsBtn");
+      const exportDataBtn = document.getElementById("exportDataBtn");
+      const importDataBtn = document.getElementById("importDataBtn");
+      const importFileInput = document.getElementById("importFileInput");
 
-    const hmFirstVisitStat = document.getElementById("hmFirstVisitStat");
-    const hmStreakStat = document.getElementById("hmStreakStat");
-    const hmTotalStat = document.getElementById("hmTotalStat");
-    const hmFirstVisitValue = document.getElementById("hmFirstVisitValue");
-    const hmStreakValue = document.getElementById("hmStreakValue");
-    const hmTotalValue = document.getElementById("hmTotalValue");
-    const hmTooltip = document.getElementById("hmTooltip");
+      const toggleHeatmapVisible = document.getElementById("toggleHeatmapVisible");
+      const toggleHideEnglishNotes = document.getElementById("toggleHideEnglishNotes");
+      const toggleEmojiScores = document.getElementById("toggleEmojiScores");
 
-    // Settings controls
-    const toggleHeatmapVisible = document.getElementById("toggleHeatmapVisible");
-    const hmMonthView = document.getElementById("hmMonthView");
-    const hmShowMonthTitles = document.getElementById("hmShowMonthTitles");
-    const hmShowFirstVisit = document.getElementById("hmShowFirstVisit");
-    const hmShowStreak = document.getElementById("hmShowStreak");
-    const hmShowTotal = document.getElementById("hmShowTotal");
-    const hmPaletteOptions = document.getElementById("hmPaletteOptions");
+      // View All modal
+      const openViewAllBtn = document.getElementById("openViewAllBtn");
+      const viewAllModal = document.getElementById("viewAllModal");
+      const closeViewAllBtn = document.getElementById("closeViewAllBtn");
+      const viewAllContent = document.getElementById("viewAllContent");
+      const viewAllSearch = document.getElementById("viewAllSearch");
+      const viewAllFilterSeenBtn = document.getElementById("viewAllFilterSeen");
+      const viewAllFilterUnseenBtn = document.getElementById("viewAllFilterUnseen");
+      let viewAllStarFilter = null; // 'seen' | 'unseen' | null
 
-    // ---------- helpers ----------
-    function safeJsonParse(str, fallback){
-      try { return JSON.parse(str); } catch { return fallback; }
-    }
-    function dateToYMDString(d){
-      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
-    }
-    function daysBetweenSafe(start, target){
-      const msPerDay = 24*60*60*1000;
-      return Math.floor(
-        (new Date(target.getFullYear(), target.getMonth(), target.getDate()).getTime() -
-         new Date(start.getFullYear(), start.getMonth(), start.getDate()).getTime()) / msPerDay
-      );
-    }
-    function mod(n, m){ return ((n % m) + m) % m; }
-    function clampEmptyContentEditable(el){
-      if (!el) return;
-      if (el.textContent.trim() === "") el.innerHTML = "";
-    }
-    function addDays(baseDate, n){
-      const d = new Date(baseDate);
-      d.setDate(d.getDate() + n);
-      return d;
-    }
-    function mondayIndexFromJsDay(jsDay){ // JS: Sun=0 ... Sat=6 => Mon=0 ... Sun=6
-      return jsDay === 0 ? 6 : jsDay - 1;
-    }
-    function escapeHtml(str){
-      return String(str)
-        .replaceAll("&","&amp;")
-        .replaceAll("<","&lt;")
-        .replaceAll(">","&gt;")
-        .replaceAll('"',"&quot;")
-        .replaceAll("'","&#039;");
-    }
-    function formatDMYShortFromYMD(ymd){
-      // ymd = YYYY-MM-DD -> DD/MM/YY
-      const [Y,M,D] = String(ymd).split("-").map(n => parseInt(n,10));
-      if (!Y || !M || !D) return ymd;
-      const yy = String(Y).slice(-2);
-      return `${String(D).padStart(2,"0")}/${String(M).padStart(2,"0")}/${yy}`;
-    }
+      // Study Log (Heatmap)
+      const heatmapPanel = document.getElementById("heatmapPanel");
+      const openHeatmapSettingsBtn = document.getElementById("openHeatmapSettingsBtn");
+      const hmGrid = document.getElementById("hmGrid");
+      const hmMonthLabels = document.getElementById("hmMonthLabels");
+      const hmPrevYearBtn = document.getElementById("hmPrevYearBtn");
+      const hmNextYearBtn = document.getElementById("hmNextYearBtn");
+      const hmYearLabel = document.getElementById("hmYearLabel");
 
-    // ---------- CSV parsing ----------
-    function parseCSV(text){
-      const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-      const rows = [];
-      for (const line of lines){
-        const parts = [];
-        let current = "";
-        let inQuotes = false;
-        for (let i=0;i<line.length;i++){
-          const c = line[i];
-          if (c === '"') inQuotes = !inQuotes;
-          else if (c === ',' && !inQuotes){
-            parts.push(current.trim());
-            current = "";
-          } else current += c;
-        }
-        parts.push(current.trim());
-        rows.push(parts);
+      const hmStats = document.getElementById("hmStats");
+      const hmFirstVisitWrap = document.getElementById("hmFirstVisitWrap");
+      const hmStreakWrap = document.getElementById("hmStreakWrap");
+      const hmTotalWrap = document.getElementById("hmTotalWrap");
+      const hmFirstVisitVal = document.getElementById("hmFirstVisitVal");
+      const hmStreakVal = document.getElementById("hmStreakVal");
+      const hmTotalVal = document.getElementById("hmTotalVal");
+
+      // Study Log settings modal
+      const heatmapSettingsModalBackdrop = document.getElementById("heatmapSettingsModalBackdrop");
+      const closeHeatmapSettingsBtn = document.getElementById("closeHeatmapSettingsBtn");
+      const hmShowFirstVisit = document.getElementById("hmShowFirstVisit");
+      const hmShowStreak = document.getElementById("hmShowStreak");
+      const hmShowTotal = document.getElementById("hmShowTotal");
+      const hmShowMonthTitles = document.getElementById("hmShowMonthTitles");
+      const hmPaletteOptions = document.getElementById("hmPaletteOptions");
+
+      // Tooltip
+      const hmTooltip = document.getElementById("hmTooltip");
+
+      // Notes import modal
+      const notesImportModalBackdrop = document.getElementById("notesImportModalBackdrop");
+      const closeNotesImportBtn = document.getElementById("closeNotesImportBtn");
+      const notesImportTextarea = document.getElementById("notesImportTextarea");
+      const applyNotesImportBtn = document.getElementById("applyNotesImportBtn");
+      const cancelNotesImportBtn = document.getElementById("cancelNotesImportBtn");
+      let notesImportContext = null; // { level, grammarKey, afterApply }
+
+      function dateToYMDString(d){
+        return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
       }
-      return rows;
-    }
-    function groupByLevel(rows){
-      const byLevel = {};
-      for (const row of rows){
-        if (row.length < 5) continue;
-        const level = row[0].trim().toUpperCase();
-        if (!/^N[1-5]$/.test(level)) continue;
-        if (!byLevel[level]) byLevel[level] = [];
-
-        const links = [];
-        for (let i=5;i<row.length;i++){
-          if (row[i].trim()) links.push(row[i].trim());
-        }
-        const primaryLink = links.length ? links[0] : null;
-        const extraLinks = links.slice(1);
-
-        byLevel[level].push({
-          level,
-          index: parseInt(row[1],10) || (byLevel[level].length + 1),
-          grammar: row[2].trim(),
-          romaji: row[3].trim() || "",
-          meaning: row[4].trim() || "",
-          primaryLink,
-          extraLinks
-        });
+      function ymdToDate(ymd){
+        const [y,m,dd] = ymd.split("-").map(n=>parseInt(n,10));
+        return new Date(y, (m||1)-1, dd||1);
       }
-      for (const lvl of LEVEL_ORDER){
-        if (byLevel[lvl]) byLevel[lvl].sort((a,b)=>a.index-b.index);
+      function formatDMYShort(d){
+        const dd = String(d.getDate()).padStart(2,"0");
+        const mm = String(d.getMonth()+1).padStart(2,"0");
+        const yy = String(d.getFullYear()).slice(-2);
+        return `${dd}/${mm}/${yy}`;
       }
-      return byLevel;
-    }
-    function shuffleArray(len){
-      const arr = Array.from({length:len},(_,i)=>i);
-      let seed = 1234567 + len * 31;
-      for (let i=len-1;i>0;i--){
-        seed = (seed * 1103515245 + 12345) & 0x7fffffff;
-        const j = Math.floor((seed / 0x80000000) * (i + 1));
-        [arr[i], arr[j]] = [arr[j], arr[i]];
+      function daysBetweenSafe(start, target){
+        const msPerDay = 24*60*60*1000;
+        return Math.floor(
+          (new Date(target.getFullYear(), target.getMonth(), target.getDate()).getTime() -
+           new Date(start.getFullYear(), start.getMonth(), start.getDate()).getTime()) / msPerDay
+        );
       }
-      return arr;
-    }
+      function mod(n, m){ return ((n % m) + m) % m; }
 
-    // ---------- persistent state ----------
-    let activeFilters = safeJsonParse(
-      localStorage.getItem(FILTER_KEY),
-      {ALL:true,N5:true,N4:true,N3:true,N2:true,N1:true}
-    );
-    let expandedSections = safeJsonParse(
-      localStorage.getItem(EXPAND_KEY),
-      {N5:true,N4:true,N3:true,N2:true,N1:true}
-    );
+      function escapeHtml(str){
+        return String(str)
+          .replaceAll("&","&amp;")
+          .replaceAll("<","&lt;")
+          .replaceAll(">","&gt;")
+          .replaceAll('"',"&quot;")
+          .replaceAll("'","&#039;");
+      }
 
-    let userData = {
-      seenExamples: {},
-      notesByGrammar: {}
-    };
-
-    const HEATMAP_DEFAULTS = {
-      visible: true,
-      monthView: false,
-      showMonthTitles: true,
-      showFirstVisit: true,
-      showStreak: true,
-      showTotal: true,
-      paletteId: "mint",
-      visitedDays: {},     // ymd -> true
-      viewYear: new Date().getFullYear()
-    };
-    let heatmapState = Object.assign({}, HEATMAP_DEFAULTS, safeJsonParse(localStorage.getItem(HEATMAP_KEY), {}));
-    if (!heatmapState.visitedDays || typeof heatmapState.visitedDays !== "object") heatmapState.visitedDays = {};
-    if (!Number.isFinite(heatmapState.viewYear)) heatmapState.viewYear = new Date().getFullYear();
-
-    function migrateNotesShape(){
-      for (const k in userData.notesByGrammar){
-        const list = Array.isArray(userData.notesByGrammar[k]) ? userData.notesByGrammar[k] : [];
-        userData.notesByGrammar[k] = list.map(note => {
-          if (note && (typeof note.jpHtml === "string" || typeof note.enHtml === "string")){
-            return { jpHtml: String(note.jpHtml || ""), enHtml: String(note.enHtml || "") };
+      function parseCSV(text){
+        const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+        const rows = [];
+        for (const line of lines){
+          const parts = [];
+          let current = "";
+          let inQuotes = false;
+          for (let i=0;i<line.length;i++){
+            const c = line[i];
+            if (c === '"') inQuotes = !inQuotes;
+            else if (c === ',' && !inQuotes){
+              parts.push(current.trim());
+              current = "";
+            } else current += c;
           }
-          const jp = note && typeof note.jp === "string" ? note.jp : "";
-          const en = note && typeof note.en === "string" ? note.en : "";
-          return { jpHtml: escapeHtml(jp), enHtml: escapeHtml(en) };
+          parts.push(current.trim());
+          rows.push(parts);
+        }
+        return rows;
+      }
+
+      function groupByLevel(rows){
+        const byLevel = {};
+        for (const row of rows){
+          if (row.length < 5) continue;
+          const level = row[0].trim().toUpperCase();
+          if (!/^N[1-5]$/.test(level)) continue;
+          if (!byLevel[level]) byLevel[level] = [];
+
+          const links = [];
+          for (let i=5;i<row.length;i++){
+            if (row[i].trim()) links.push(row[i].trim());
+          }
+          const primaryLink = links.length ? links[0] : null;
+          const extraLinks = links.slice(1);
+
+          byLevel[level].push({
+            level,
+            index: parseInt(row[1],10) || (byLevel[level].length + 1),
+            grammar: row[2].trim(),
+            romaji: row[3].trim() || "",
+            meaning: row[4].trim() || "",
+            primaryLink,
+            extraLinks
+          });
+        }
+        for (const lvl of LEVEL_ORDER){
+          if (byLevel[lvl]) byLevel[lvl].sort((a,b)=>a.index-b.index);
+        }
+        return byLevel;
+      }
+
+      function shuffleArray(len, seedSalt=0){
+        const arr = Array.from({length:len},(_,i)=>i);
+        let seed = 1234567 + len * 31 + seedSalt * 101;
+        for (let i=len-1;i>0;i--){
+          seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+          const j = Math.floor((seed / 0x80000000) * (i + 1));
+          [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+      }
+
+      function clampEmptyContentEditable(el){
+        if (!el) return;
+        if (el.textContent.trim() === "") el.innerHTML = "";
+      }
+
+      // ------------------------------- Persistent state -------------------------------
+      let activeFilters = JSON.parse(localStorage.getItem(FILTER_KEY) || JSON.stringify({ALL:true,N5:true,N4:true,N3:true,N2:true,N1:true}));
+      let expandedSections = JSON.parse(localStorage.getItem(EXPAND_KEY) || JSON.stringify({N5:true,N4:true,N3:true,N2:true,N1:true}));
+
+      let userData = {
+        seenExamples: {},
+        notesByGrammar: {},    // grammarKey -> [{jpHtml,enHtml}]
+        scoresByExample: {}    // exampleId -> 0..18
+      };
+
+      function migrateNotesShape(){
+        for (const k in userData.notesByGrammar){
+          const list = Array.isArray(userData.notesByGrammar[k]) ? userData.notesByGrammar[k] : [];
+          userData.notesByGrammar[k] = list.map(note => {
+            if (note && (typeof note.jpHtml === "string" || typeof note.enHtml === "string")){
+              return { jpHtml: String(note.jpHtml || ""), enHtml: String(note.enHtml || "") };
+            }
+            const jp = note && typeof note.jp === "string" ? note.jp : "";
+            const en = note && typeof note.en === "string" ? note.en : "";
+            return { jpHtml: escapeHtml(jp), enHtml: escapeHtml(en) };
+          });
+        }
+      }
+      function migrateScoresShape(){
+        if (!userData.scoresByExample || typeof userData.scoresByExample !== "object") userData.scoresByExample = {};
+        for (const k in userData.scoresByExample){
+          const n = parseInt(userData.scoresByExample[k], 10);
+          if (!Number.isFinite(n)) delete userData.scoresByExample[k];
+          else userData.scoresByExample[k] = Math.max(0, Math.min(SCORE_MAX, n));
+        }
+      }
+
+      function loadUserData(){
+        const raw = localStorage.getItem(DATA_KEY);
+        if (!raw) return;
+        try{
+          const parsed = JSON.parse(raw);
+          if (parsed && typeof parsed === "object"){
+            userData.seenExamples = parsed.seenExamples || {};
+            userData.notesByGrammar = parsed.notesByGrammar || {};
+            userData.scoresByExample = parsed.scoresByExample || {};
+            migrateNotesShape();
+            migrateScoresShape();
+          }
+        } catch (e){
+          console.warn("Failed to parse user data", e);
+        }
+      }
+      function saveUserData(){ localStorage.setItem(DATA_KEY, JSON.stringify(userData)); }
+      function saveState(){
+        localStorage.setItem(FILTER_KEY, JSON.stringify(activeFilters));
+        localStorage.setItem(EXPAND_KEY, JSON.stringify(expandedSections));
+        saveUserData();
+      }
+      loadUserData();
+
+      // Global settings
+      let hideEnglishDefault = false;
+      let scoresEnabled = true;
+
+      function loadGlobalSettings(){
+        try{
+          const raw = localStorage.getItem(GLOBAL_SETTINGS_KEY);
+          if (!raw) return;
+          const parsed = JSON.parse(raw);
+          if (parsed && typeof parsed === "object"){
+            if (typeof parsed.hideEnglishDefault === "boolean") hideEnglishDefault = parsed.hideEnglishDefault;
+            if (typeof parsed.scoresEnabled === "boolean") scoresEnabled = parsed.scoresEnabled;
+          }
+        } catch {}
+      }
+      function saveGlobalSettings(){
+        localStorage.setItem(GLOBAL_SETTINGS_KEY, JSON.stringify({ hideEnglishDefault, scoresEnabled }));
+      }
+      loadGlobalSettings();
+
+      function setScoresEnabled(on){
+        scoresEnabled = !!on;
+        document.body.classList.toggle("no-scores", !scoresEnabled);
+        saveGlobalSettings();
+      }
+
+      function updateFilterButtons(){
+        filterButtons.forEach(btn => btn.classList.toggle("active", !!activeFilters[btn.dataset.level]));
+      }
+      function getLevelsToShow(){
+        const active = Object.keys(activeFilters).filter(k => activeFilters[k]);
+        if (active.includes("ALL")) return LEVEL_ORDER.filter(lvl => byLevel[lvl]);
+        return active.filter(lvl => byLevel[lvl]).sort((a,b)=>LEVEL_ORDER.indexOf(a)-LEVEL_ORDER.indexOf(b));
+      }
+
+      function setTodayButtonLabel(viewStr){
+        const todayYMD = dateToYMDString(new Date());
+        if (viewStr === todayYMD){
+          todayBtn.textContent = "Today";
+        } else {
+          const d = new Date(viewStr + "T00:00:00");
+          const dd = String(d.getDate()).padStart(2,"0");
+          const mm = String(d.getMonth()+1).padStart(2,"0");
+          todayBtn.textContent = `${dd}/${mm}`;
+        }
+      }
+
+      // ------------------------------- Tooltip -------------------------------
+      function showTooltip(text, x, y){
+        hmTooltip.textContent = text;
+        hmTooltip.classList.add("show");
+
+        // position near cursor, but keep on-screen
+        const pad = 10;
+        const gutter = 8;
+
+        // measure after content set
+        const rect = hmTooltip.getBoundingClientRect();
+        let left = x + pad;
+        let top = y + pad;
+
+        const maxLeft = window.innerWidth - rect.width - gutter;
+        const maxTop = window.innerHeight - rect.height - gutter;
+
+        if (left > maxLeft) left = Math.max(gutter, x - pad - rect.width);
+        if (top > maxTop) top = Math.max(gutter, y - pad - rect.height);
+
+        hmTooltip.style.left = `${left}px`;
+        hmTooltip.style.top = `${top}px`;
+      }
+      function hideTooltip(){ hmTooltip.classList.remove("show"); }
+
+      // ------------------------------- CSV -------------------------------
+      const csvText = document.getElementById("csvData").content.textContent;
+      const rows = parseCSV(csvText);
+      const byLevel = groupByLevel(rows);
+      const permutations = {};
+      Object.keys(byLevel).forEach((level, idx) => permutations[level] = shuffleArray(byLevel[level].length, idx));
+
+      // ------------------------------- Emoji score system -------------------------------
+      function getScore(exampleId){
+        const n = parseInt(userData.scoresByExample?.[exampleId], 10);
+        if (!Number.isFinite(n)) return 0;
+        return Math.max(0, Math.min(SCORE_MAX, n));
+      }
+      function setScore(exampleId, score){
+        const clamped = Math.max(0, Math.min(SCORE_MAX, parseInt(score,10) || 0));
+        userData.scoresByExample[exampleId] = clamped;
+        saveUserData();
+      }
+      function scoreTooltipText(score){
+        if (score <= 0) return "New!";
+        if (score >= SCORE_MAX) return "Should be good at this now!";
+        return `Score: ${score}`;
+      }
+      function closeAllScorePickers(){
+        document.querySelectorAll(".score-wrap.editing").forEach(el => el.classList.remove("editing"));
+      }
+      function setScoreEmojiInWrap(wrap, exampleId){
+        const em = wrap.querySelector(".score-emoji");
+        const dec = wrap.querySelector(".score-arrow.dec");
+        const inc = wrap.querySelector(".score-arrow.inc");
+        const score = getScore(exampleId);
+        em.textContent = SCORE_EMOJIS[score] || SCORE_EMOJIS[0];
+        if (dec) dec.disabled = (score <= 0);
+        if (inc) inc.disabled = (score >= SCORE_MAX);
+      }
+      function updateScoreUIEverywhere(exampleId){
+        document.querySelectorAll(`.score-wrap[data-example-id="${CSS.escape(exampleId)}"]`).forEach(wrap => {
+          setScoreEmojiInWrap(wrap, exampleId);
         });
       }
-    }
-    function loadUserData(){
-      const raw = localStorage.getItem(DATA_KEY);
-      if (!raw) return;
-      try{
-        const parsed = JSON.parse(raw);
-        if (parsed && typeof parsed === "object"){
-          userData.seenExamples = parsed.seenExamples || {};
-          userData.notesByGrammar = parsed.notesByGrammar || {};
-          migrateNotesShape();
-        }
-      } catch (e){
-        console.warn("Failed to parse user data", e);
+
+      // ------------------------------- Study Log (Heatmap) -------------------------------
+      const HEATMAP_PALETTES = [
+        { key:"mint",   name:"Mint",   border:"rgba(34,197,94,.88)",  fill:"rgba(34,197,94,.55)" },
+        { key:"ocean",  name:"Ocean",  border:"rgba(59,130,246,.88)", fill:"rgba(59,130,246,.55)" },
+        { key:"amber",  name:"Amber",  border:"rgba(245,158,11,.9)",  fill:"rgba(245,158,11,.52)" },
+        { key:"rose",   name:"Rose",   border:"rgba(244,63,94,.9)",   fill:"rgba(244,63,94,.52)" },
+        { key:"violet", name:"Violet", border:"rgba(168,85,247,.9)",  fill:"rgba(168,85,247,.52)" }
+      ];
+
+      let heatmapState = {
+        visible: false,
+        viewYear: new Date().getFullYear(),
+        showMonthTitles: false,
+        showFirstVisit: true,
+        showStreak: true,
+        showTotal: true,
+        paletteKey: "mint",
+        visitedDays: {} // ymd -> true
+      };
+
+      function loadHeatmapState(){
+        try{
+          const raw = localStorage.getItem(HEATMAP_KEY);
+          if (!raw) return;
+          const parsed = JSON.parse(raw);
+          if (parsed && typeof parsed === "object"){
+            heatmapState = { ...heatmapState, ...parsed };
+            if (!heatmapState.visitedDays || typeof heatmapState.visitedDays !== "object") heatmapState.visitedDays = {};
+          }
+        } catch {}
       }
-    }
-    function saveUserData(){ localStorage.setItem(DATA_KEY, JSON.stringify(userData)); }
-    function saveHeatmapState(){ localStorage.setItem(HEATMAP_KEY, JSON.stringify(heatmapState)); }
-    function saveState(){
-      localStorage.setItem(FILTER_KEY, JSON.stringify(activeFilters));
-      localStorage.setItem(EXPAND_KEY, JSON.stringify(expandedSections));
-      saveUserData();
-      saveHeatmapState();
-    }
-    loadUserData();
-
-    // ---------- heatmap palettes (ORDER: Mint Ocean Amber Rose Violet) ----------
-    const HEATMAP_PALETTES = [
-      { id:"mint",   name:"Mint",   fill:"rgba(34,197,94,.50)",  border:"rgba(34,197,94,.80)"  },
-      { id:"ocean",  name:"Ocean",  fill:"rgba(56,189,248,.55)", border:"rgba(56,189,248,.75)" },
-      { id:"amber",  name:"Amber",  fill:"rgba(245,158,11,.50)", border:"rgba(245,158,11,.82)" },
-      { id:"rose",   name:"Rose",   fill:"rgba(244,63,94,.40)",  border:"rgba(244,63,94,.78)"  },
-      { id:"violet", name:"Violet", fill:"rgba(168,85,247,.45)", border:"rgba(168,85,247,.78)" }
-    ];
-    function applyHeatmapPalette(){
-      const pal = HEATMAP_PALETTES.find(p => p.id === heatmapState.paletteId) || HEATMAP_PALETTES[0];
-      document.documentElement.style.setProperty("--hm-fill", pal.fill);
-      document.documentElement.style.setProperty("--hm-border", pal.border);
-    }
-    function renderPaletteOptions(){
-      hmPaletteOptions.innerHTML = "";
-      HEATMAP_PALETTES.forEach(p => {
-        const btn = document.createElement("button");
-        btn.type = "button";
-        btn.className = "hm-palette-btn";
-        btn.innerHTML = `<span class="hm-palette-swatch"></span><span>${escapeHtml(p.name)}</span>`;
-        const sw = btn.querySelector(".hm-palette-swatch");
-        sw.style.background = p.fill;
-        sw.style.borderColor = p.border;
-
-        btn.classList.toggle("active", heatmapState.paletteId === p.id);
-        btn.addEventListener("click", () => {
-          heatmapState.paletteId = p.id;
-          applyHeatmapPalette();
-          saveHeatmapState();
-          renderPaletteOptions();
-          renderHeatmap();
-        });
-        hmPaletteOptions.appendChild(btn);
-      });
-    }
-
-    // ---------- tooltip positioning (mouse origin + never offscreen) ----------
-    let lastPointer = { x: 20, y: 20 }; // client coords
-    function setPointerFromEvent(ev){
-      if (!ev) return;
-      if (typeof ev.clientX === "number" && typeof ev.clientY === "number"){
-        lastPointer = { x: ev.clientX, y: ev.clientY };
+      function saveHeatmapState(){
+        localStorage.setItem(HEATMAP_KEY, JSON.stringify(heatmapState));
       }
-    }
-    function showTooltip(text, ev){
-      if (!hmTooltip) return;
-      hmTooltip.textContent = text;
-      hmTooltip.classList.add("show");
-      hmTooltip.setAttribute("aria-hidden","false");
-      setPointerFromEvent(ev);
-      positionTooltipAt(lastPointer.x, lastPointer.y);
-    }
-    function positionTooltipAt(x, y){
-      const tip = hmTooltip;
-      if (!tip || !tip.classList.contains("show")) return;
 
-      // Make sure layout is measurable
-      tip.style.left = "0px";
-      tip.style.top = "0px";
-
-      const rect = tip.getBoundingClientRect();
-      const vw = window.innerWidth || document.documentElement.clientWidth;
-      const vh = window.innerHeight || document.documentElement.clientHeight;
-      const pad = 10;
-      const offset = 12;
-
-      // Prefer down-right from mouse
-      let left = x + offset;
-      let top = y + offset;
-
-      // Flip if overflowing
-      if (left + rect.width + pad > vw) left = x - rect.width - offset;
-      if (top + rect.height + pad > vh) top = y - rect.height - offset;
-
-      // Clamp
-      left = Math.max(pad, Math.min(left, vw - rect.width - pad));
-      top = Math.max(pad, Math.min(top, vh - rect.height - pad));
-
-      tip.style.left = `${left}px`;
-      tip.style.top = `${top}px`;
-    }
-    function hideTooltip(){
-      if (!hmTooltip) return;
-      hmTooltip.classList.remove("show");
-      hmTooltip.setAttribute("aria-hidden","true");
-    }
-
-    // ---------- “today” day resolution (system first, then best-effort internet) ----------
-    let effectiveTodayYMD = dateToYMDString(new Date());
-    async function tryResolveInternetTodayYMD(){
-      try{
-        const ctrl = new AbortController();
-        const t = setTimeout(() => ctrl.abort(), 1800);
-        const res = await fetch("https://worldtimeapi.org/api/ip", { signal: ctrl.signal, cache: "no-store" });
-        clearTimeout(t);
-        if (!res.ok) return null;
-        const data = await res.json();
-        if (!data || !data.datetime) return null;
-        const d = new Date(data.datetime);
-        if (Number.isNaN(d.getTime())) return null;
-        return dateToYMDString(d);
-      } catch {
-        return null;
+      function applyHeatmapVisibility(){
+        heatmapPanel.hidden = !heatmapState.visible;
       }
-    }
 
-    function recordVisitedDay(ymd, value){
-      if (!ymd) return;
-      if (value) heatmapState.visitedDays[ymd] = true;
-      else delete heatmapState.visitedDays[ymd];
-      saveHeatmapState();
-      updateHeatmapStats();
-      renderHeatmap();
-    }
-
-    function recordVisitForTodayOnLoad(){
-      recordVisitedDay(effectiveTodayYMD, true);
-      tryResolveInternetTodayYMD().then((internetYMD) => {
-        if (internetYMD && internetYMD !== effectiveTodayYMD){
-          effectiveTodayYMD = internetYMD;
-          recordVisitedDay(effectiveTodayYMD, true);
-        }
-      });
-    }
-
-    function applyHeatmapVisibility(){
-      heatmapPanel.style.display = heatmapState.visible ? "" : "none";
-    }
-
-    function computeFirstVisitYMD(){
-      const keys = Object.keys(heatmapState.visitedDays || {});
-      if (!keys.length) return null;
-      keys.sort(); // oldest active box
-      return keys[0];
-    }
-
-    function computeCurrentStreakDays(){
-      const visited = heatmapState.visitedDays || {};
-      if (!visited[effectiveTodayYMD]) return 0;
-
-      const msPerDay = 24*60*60*1000;
-      let streak = 0;
-      let cur = new Date(effectiveTodayYMD + "T00:00:00");
-      while (true){
-        const ymd = dateToYMDString(cur);
-        if (!visited[ymd]) break;
-        streak++;
-        cur = new Date(cur.getTime() - msPerDay);
+      function applyHeatmapPalette(){
+        const pal = HEATMAP_PALETTES.find(p => p.key === heatmapState.paletteKey) || HEATMAP_PALETTES[0];
+        document.documentElement.style.setProperty("--hm-border", pal.border);
+        document.documentElement.style.setProperty("--hm-fill", pal.fill);
       }
-      return streak;
-    }
 
-    function getActiveLevelsForTooltip(){
-      if (activeFilters.ALL) return LEVEL_ORDER.slice();
-      return LEVEL_ORDER.filter(lvl => !!activeFilters[lvl]);
-    }
-
-    function buildTotalTooltipText(visitCount){
-      const levels = getActiveLevelsForTooltip();
-      const perLevel = {};
-      levels.forEach(lvl => { perLevel[lvl] = visitCount * ITEMS_PER_DAY; });
-      const totalGrammar = levels.length * visitCount * ITEMS_PER_DAY;
-
-      const parts = [];
-      parts.push(`You have visited ${visitCount} time${visitCount === 1 ? "" : "s"}!`);
-      parts.push(`That means you've seen ${totalGrammar} grammar point${totalGrammar === 1 ? "" : "s"} (based on your active level filters).`);
-      if (levels.length){
-        const breakdown = levels.map(lvl => `${perLevel[lvl]} ${lvl.toLowerCase()}`).join(", ");
-        parts.push(`That's ${breakdown}.`);
-      }
-      return parts.join(" ");
-    }
-
-    function updateHeatmapStats(){
-      hmFirstVisitStat.style.display = heatmapState.showFirstVisit ? "" : "none";
-      hmStreakStat.style.display = heatmapState.showStreak ? "" : "none";
-      hmTotalStat.style.display = heatmapState.showTotal ? "" : "none";
-
-      const visitedKeys = Object.keys(heatmapState.visitedDays || {});
-      const total = visitedKeys.length;
-
-      const first = computeFirstVisitYMD();
-      hmFirstVisitValue.textContent = first || "—";
-
-      const streak = computeCurrentStreakDays();
-      hmStreakValue.textContent = `${streak} day${streak === 1 ? "" : "s"}`;
-
-      hmTotalValue.textContent = String(total);
-    }
-
-    function attachCellTooltip(btn, ymd){
-      btn.addEventListener("mouseenter", (ev) => {
-        showTooltip(formatDMYShortFromYMD(ymd), ev);
-      });
-      btn.addEventListener("mousemove", (ev) => {
-        setPointerFromEvent(ev);
-        positionTooltipAt(lastPointer.x, lastPointer.y);
-      });
-      btn.addEventListener("mouseleave", () => hideTooltip());
-    }
-
-    function buildMonthLabelsForYearGrid({ year, gridStart, weeks, cell, gap }){
-      if (!heatmapState.showMonthTitles) return null;
-
-      const labelsRow = document.createElement("div");
-      labelsRow.style.position = "relative";
-      labelsRow.style.height = "18px";
-      labelsRow.style.margin = "0 0 8px 0";
-      labelsRow.style.width = `${weeks * (cell + gap) - gap}px`;
-      labelsRow.style.minWidth = "fit-content";
-
-      const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-
-      for (let m=0; m<12; m++){
-        const first = new Date(year, m, 1);
-        const diffDays = Math.floor((new Date(first.getFullYear(), first.getMonth(), first.getDate()).getTime() - gridStart.getTime()) / (24*60*60*1000));
-        const weekIdx = Math.floor(diffDays / 7);
-        if (weekIdx < 0 || weekIdx >= weeks) continue;
-
-        const lab = document.createElement("div");
-        lab.textContent = monthNames[m];
-        lab.style.position = "absolute";
-        lab.style.left = `${weekIdx * (cell + gap)}px`;
-        lab.style.top = "0px";
-        lab.style.fontSize = "11px";
-        lab.style.letterSpacing = ".10em";
-        lab.style.textTransform = "uppercase";
-        lab.style.color = "rgba(148,163,184,.92)";
-        lab.style.pointerEvents = "none";
-        labelsRow.appendChild(lab);
-      }
-      return labelsRow;
-    }
-
-    function renderYearGrid(year){
-      heatmapHost.innerHTML = "";
-
-      const msPerDay = 24*60*60*1000;
-      const jan1 = new Date(year,0,1);
-      const dec31 = new Date(year,11,31);
-
-      const startOffset = mondayIndexFromJsDay(jan1.getDay());
-      const endOffset = 6 - mondayIndexFromJsDay(dec31.getDay());
-
-      const gridStart = addDays(jan1, -startOffset);
-      const gridEnd = addDays(dec31, endOffset);
-
-      const totalDays = Math.round((gridEnd.getTime() - gridStart.getTime()) / msPerDay) + 1;
-      const weeks = Math.ceil(totalDays / 7);
-
-      // Wrapper so labels + grid scroll together
-      const wrap = document.createElement("div");
-      wrap.style.minWidth = "fit-content";
-
-      const cell = parseInt(getComputedStyle(document.documentElement).getPropertyValue("--hm-cell")) || 12;
-      const gap = parseInt(getComputedStyle(document.documentElement).getPropertyValue("--hm-gap")) || 4;
-
-      const labels = buildMonthLabelsForYearGrid({ year, gridStart: new Date(gridStart.getFullYear(), gridStart.getMonth(), gridStart.getDate()), weeks, cell, gap });
-      if (labels) wrap.appendChild(labels);
-
-      const grid = document.createElement("div");
-      grid.className = "hm-grid";
-      grid.style.setProperty("--hm-weeks", String(weeks));
-
-      for (let col=0; col<weeks; col++){
-        for (let row=0; row<7; row++){
-          const d = addDays(gridStart, col*7 + row);
-          const inYear = d.getFullYear() === year;
-          const ymd = dateToYMDString(d);
-
+      function renderPaletteOptions(){
+        hmPaletteOptions.innerHTML = "";
+        HEATMAP_PALETTES.forEach(p => {
           const btn = document.createElement("button");
           btn.type = "button";
-          btn.className = "hm-cell-btn";
-          btn.setAttribute("aria-label", ymd);
+          btn.className = "hm-palette-btn";
+          btn.classList.toggle("active", heatmapState.paletteKey === p.key);
 
-          if (!inYear){
-            btn.classList.add("out");
-          } else {
-            const visited = !!heatmapState.visitedDays[ymd];
-            if (visited) btn.classList.add("visited");
-            if (ymd === effectiveTodayYMD) btn.classList.add("today");
+          const sw = document.createElement("span");
+          sw.className = "hm-palette-swatch";
+          sw.style.setProperty("--hm-border", p.border);
+          sw.style.setProperty("--hm-fill", p.fill);
 
-            btn.dataset.ymd = ymd;
+          const label = document.createElement("span");
+          label.textContent = p.name;
 
-            attachCellTooltip(btn, ymd);
+          btn.appendChild(sw);
+          btn.appendChild(label);
 
-            btn.addEventListener("click", () => {
-              const cur = !!heatmapState.visitedDays[ymd];
-              recordVisitedDay(ymd, !cur);
-            });
-          }
+          btn.addEventListener("click", () => {
+            heatmapState.paletteKey = p.key;
+            saveHeatmapState();
+            applyHeatmapPalette();
+            renderPaletteOptions();
+            renderHeatmap();
+          });
 
-          grid.appendChild(btn);
+          hmPaletteOptions.appendChild(btn);
+        });
+      }
+
+      function dowMon0(d){
+        // JS: Sun=0..Sat=6 => Mon=0..Sun=6
+        return (d.getDay() + 6) % 7;
+      }
+
+      function daysInYear(year){
+        const start = new Date(year,0,1);
+        const end = new Date(year+1,0,1);
+        return Math.round((end - start) / (24*60*60*1000));
+      }
+
+      function fitHeatmapToWidth(cols){
+        const wrap = heatmapPanel.querySelector(".hm-grid-wrap");
+        if (!wrap) return;
+
+        const available = Math.max(240, wrap.clientWidth - 4);
+        const gap = 3;
+        const cell = Math.floor((available - (cols - 1) * gap) / cols);
+
+        const clampCell = Math.max(9, Math.min(16, cell));
+        document.documentElement.style.setProperty("--hm-gap", `${gap}px`);
+        document.documentElement.style.setProperty("--hm-cell", `${clampCell}px`);
+      }
+
+      function recordTodayVisit(){
+        const today = new Date();
+        const ymd = dateToYMDString(today);
+        if (!heatmapState.visitedDays[ymd]){
+          heatmapState.visitedDays[ymd] = true;
+          saveHeatmapState();
         }
       }
 
-      wrap.appendChild(grid);
-      heatmapHost.appendChild(wrap);
-    }
+      function getActiveVisitedYMDs(){
+        return Object.keys(heatmapState.visitedDays || {}).filter(k => !!heatmapState.visitedDays[k]).sort();
+      }
 
-    function renderMonthView(year){
-      heatmapHost.innerHTML = "";
+      function computeFirstVisit(){
+        const list = getActiveVisitedYMDs();
+        if (!list.length) return null;
+        return list[0];
+      }
 
-      const monthsWrap = document.createElement("div");
-      monthsWrap.className = "hm-months";
+      function computeStreakTodayBased(){
+        const todayYMD = dateToYMDString(new Date());
+        if (!heatmapState.visitedDays[todayYMD]) return 0;
 
-      const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-      const msPerDay = 24*60*60*1000;
+        let streak = 0;
+        let d = new Date();
+        while (true){
+          const ymd = dateToYMDString(d);
+          if (!heatmapState.visitedDays[ymd]) break;
+          streak++;
+          d.setDate(d.getDate() - 1);
+        }
+        return streak;
+      }
 
-      for (let m=0; m<12; m++){
-        const monthStart = new Date(year, m, 1);
-        const monthEnd = new Date(year, m+1, 0);
+      function computeTotal(){
+        return getActiveVisitedYMDs().length;
+      }
 
-        const startOffset = mondayIndexFromJsDay(monthStart.getDay());
-        const endOffset = 6 - mondayIndexFromJsDay(monthEnd.getDay());
+      function applyHeatmapStatsUI(){
+        hmShowFirstVisit.checked = !!heatmapState.showFirstVisit;
+        hmShowStreak.checked = !!heatmapState.showStreak;
+        hmShowTotal.checked = !!heatmapState.showTotal;
+        hmShowMonthTitles.checked = !!heatmapState.showMonthTitles;
 
-        const gridStart = addDays(monthStart, -startOffset);
-        const gridEnd = addDays(monthEnd, endOffset);
+        hmFirstVisitWrap.style.display = heatmapState.showFirstVisit ? "" : "none";
+        hmStreakWrap.style.display = heatmapState.showStreak ? "" : "none";
+        hmTotalWrap.style.display = heatmapState.showTotal ? "" : "none";
+      }
 
-        const totalDays = Math.round((gridEnd.getTime() - gridStart.getTime()) / msPerDay) + 1;
-        const weeks = Math.ceil(totalDays / 7);
+      function renderHeatmapStats(){
+        const first = computeFirstVisit();
+        hmFirstVisitVal.textContent = first ? formatDMYShort(ymdToDate(first)) : "—";
+        hmStreakVal.textContent = String(computeStreakTodayBased());
+        hmTotalVal.textContent = String(computeTotal());
+      }
 
-        const card = document.createElement("div");
-        card.className = "hm-month";
-
-        if (heatmapState.showMonthTitles){
-          const head = document.createElement("div");
-          head.className = "hm-month-title";
-          head.innerHTML = `<span>${monthNames[m]}</span><span style="color:rgba(148,163,184,.75);letter-spacing:.08em;">${year}</span>`;
-          card.appendChild(head);
+      function buildMonthLabelsForYear(year, shift, cols){
+        hmMonthLabels.innerHTML = "";
+        if (!heatmapState.showMonthTitles){
+          hmMonthLabels.style.display = "none";
+          return;
         }
 
-        const grid = document.createElement("div");
-        grid.className = "hm-month-grid";
-        grid.style.setProperty("--hm-weeks", String(weeks));
+        hmMonthLabels.style.display = "grid";
+        hmMonthLabels.style.gridTemplateColumns = `repeat(${cols}, var(--hm-cell))`;
+        hmMonthLabels.style.columnGap = "var(--hm-gap)";
 
-        for (let col=0; col<weeks; col++){
+        const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+        // For each month, place a label spanning until next month start (nice & readable)
+        const starts = [];
+        for (let m=0;m<12;m++){
+          const d = new Date(year, m, 1);
+          const dayOfYear = Math.floor((d - new Date(year,0,1)) / (24*60*60*1000));
+          const col = Math.floor((shift + dayOfYear) / 7);
+          starts.push({ m, col });
+        }
+        for (let i=0;i<starts.length;i++){
+          const cur = starts[i];
+          const nextCol = (i < starts.length-1) ? starts[i+1].col : cols;
+          const span = Math.max(1, nextCol - cur.col);
+
+          const el = document.createElement("div");
+          el.className = "hm-month-label";
+          el.textContent = monthNames[cur.m];
+          el.style.gridColumn = `${cur.col + 1} / span ${span}`;
+          hmMonthLabels.appendChild(el);
+        }
+      }
+
+      function renderYearView(year){
+        const totalDays = daysInYear(year);
+        const jan1 = new Date(year,0,1);
+        const shift = dowMon0(jan1); // blanks before Jan 1 (Mon-first)
+        const totalCells = shift + totalDays;
+        const cols = Math.ceil(totalCells / 7); // can be 53
+        fitHeatmapToWidth(cols);
+
+        hmYearLabel.textContent = String(year);
+
+        hmGrid.innerHTML = "";
+        const todayYMD = dateToYMDString(new Date());
+
+        buildMonthLabelsForYear(year, shift, cols);
+
+        // Build grid in column-major order (matches grid-auto-flow:column + 7 rows)
+        for (let col=0; col<cols; col++){
           for (let row=0; row<7; row++){
-            const d = addDays(gridStart, col*7 + row);
-            const inMonth = (d.getFullYear() === year && d.getMonth() === m);
-            const ymd = dateToYMDString(d);
+            const linear = col*7 + row;
+            const dayOffset = linear - shift;
 
             const btn = document.createElement("button");
             btn.type = "button";
             btn.className = "hm-cell-btn";
-            btn.setAttribute("aria-label", ymd);
 
-            if (!inMonth){
+            if (dayOffset < 0 || dayOffset >= totalDays){
               btn.classList.add("out");
-            } else {
-              const visited = !!heatmapState.visitedDays[ymd];
-              if (visited) btn.classList.add("visited");
-              if (ymd === effectiveTodayYMD) btn.classList.add("today");
-
-              attachCellTooltip(btn, ymd);
-
-              btn.addEventListener("click", () => {
-                const cur = !!heatmapState.visitedDays[ymd];
-                recordVisitedDay(ymd, !cur);
-              });
+              btn.tabIndex = -1;
+              hmGrid.appendChild(btn);
+              continue;
             }
-            grid.appendChild(btn);
-          }
-        }
 
-        card.appendChild(grid);
-        monthsWrap.appendChild(card);
-      }
+            const d = new Date(year,0,1 + dayOffset);
+            const ymd = dateToYMDString(d);
 
-      heatmapHost.appendChild(monthsWrap);
-    }
+            const visited = !!heatmapState.visitedDays[ymd];
+            if (visited) btn.classList.add("visited");
+            if (ymd === todayYMD) btn.classList.add("today");
+            if (d.getDate() === 1) btn.classList.add("month-boundary");
 
-    function renderHeatmap(){
-      if (!heatmapPanel || heatmapPanel.style.display === "none") return;
+            btn.setAttribute("aria-label", `Study log ${formatDMYShort(d)}`);
 
-      const year = Number(heatmapState.viewYear);
-      hmYearLabel.textContent = String(year);
+            btn.addEventListener("click", (ev) => {
+              ev.stopPropagation();
+              // IMPORTANT: clicking toggles days manually; calendar browsing does not add days.
+              if (heatmapState.visitedDays[ymd]) delete heatmapState.visitedDays[ymd];
+              else heatmapState.visitedDays[ymd] = true;
 
-      if (heatmapState.monthView) renderMonthView(year);
-      else renderYearGrid(year);
-    }
-
-    // ---------- apply initial UI from state ----------
-    applyHeatmapPalette();
-    applyHeatmapVisibility();
-    renderPaletteOptions();
-
-    toggleHeatmapVisible.checked = !!heatmapState.visible;
-    toggleHeatmapVisible.addEventListener("change", () => {
-      heatmapState.visible = !!toggleHeatmapVisible.checked;
-      saveHeatmapState();
-      applyHeatmapVisibility();
-      renderHeatmap();
-    });
-
-    hmMonthView.checked = !!heatmapState.monthView;
-    hmShowMonthTitles.checked = !!heatmapState.showMonthTitles;
-
-    hmShowFirstVisit.checked = !!heatmapState.showFirstVisit;
-    hmShowStreak.checked = !!heatmapState.showStreak;
-    hmShowTotal.checked = !!heatmapState.showTotal;
-
-    function syncHeatmapSettingsFromControls(){
-      heatmapState.monthView = !!hmMonthView.checked;
-      heatmapState.showMonthTitles = !!hmShowMonthTitles.checked;
-
-      heatmapState.showFirstVisit = !!hmShowFirstVisit.checked;
-      heatmapState.showStreak = !!hmShowStreak.checked;
-      heatmapState.showTotal = !!hmShowTotal.checked;
-
-      saveHeatmapState();
-      updateHeatmapStats();
-      renderHeatmap();
-    }
-    hmMonthView.addEventListener("change", syncHeatmapSettingsFromControls);
-    hmShowMonthTitles.addEventListener("change", syncHeatmapSettingsFromControls);
-    hmShowFirstVisit.addEventListener("change", syncHeatmapSettingsFromControls);
-    hmShowStreak.addEventListener("change", syncHeatmapSettingsFromControls);
-    hmShowTotal.addEventListener("change", syncHeatmapSettingsFromControls);
-
-    hmPrevYearBtn.addEventListener("click", () => {
-      heatmapState.viewYear = Number(heatmapState.viewYear) - 1;
-      saveHeatmapState();
-      renderHeatmap();
-    });
-    hmNextYearBtn.addEventListener("click", () => {
-      heatmapState.viewYear = Number(heatmapState.viewYear) + 1;
-      saveHeatmapState();
-      renderHeatmap();
-    });
-
-    // Total tooltip (from mouse origin, like cells)
-    hmTotalStat.addEventListener("mouseenter", (ev) => {
-      const visitCount = Object.keys(heatmapState.visitedDays || {}).length;
-      showTooltip(buildTotalTooltipText(visitCount), ev);
-    });
-    hmTotalStat.addEventListener("mousemove", (ev) => {
-      setPointerFromEvent(ev);
-      positionTooltipAt(lastPointer.x, lastPointer.y);
-    });
-    hmTotalStat.addEventListener("mouseleave", hideTooltip);
-
-    // Heatmap settings modal
-    function openHeatmapSettings(){
-      // keep controls synced each open
-      hmMonthView.checked = !!heatmapState.monthView;
-      hmShowMonthTitles.checked = !!heatmapState.showMonthTitles;
-      hmShowFirstVisit.checked = !!heatmapState.showFirstVisit;
-      hmShowStreak.checked = !!heatmapState.showStreak;
-      hmShowTotal.checked = !!heatmapState.showTotal;
-
-      heatmapSettingsModalBackdrop.classList.add("show");
-    }
-    function closeHeatmapSettings(){ heatmapSettingsModalBackdrop.classList.remove("show"); }
-    openHeatmapSettingsBtn.addEventListener("click", openHeatmapSettings);
-    closeHeatmapSettingsBtn.addEventListener("click", closeHeatmapSettings);
-    heatmapSettingsModalBackdrop.addEventListener("click", (ev) => {
-      if (ev.target === heatmapSettingsModalBackdrop) closeHeatmapSettings();
-    });
-
-    // only auto-mark “today” on actual page visit (load), not when changing the calendar view
-    recordVisitForTodayOnLoad();
-    updateHeatmapStats();
-    renderHeatmap();
-
-    // ---------- CSV load ----------
-    const csvText = document.getElementById("csvData").content.textContent;
-    const rows = parseCSV(csvText);
-    const byLevel = groupByLevel(rows);
-    const permutations = {};
-    Object.keys(byLevel).forEach(level => permutations[level] = shuffleArray(byLevel[level].length));
-
-    // ---------- filters helpers ----------
-    function updateFilterButtons(){
-      filterButtons.forEach(btn => btn.classList.toggle("active", !!activeFilters[btn.dataset.level]));
-    }
-    function getLevelsToShow(){
-      const active = Object.keys(activeFilters).filter(k => activeFilters[k]);
-      if (active.includes("ALL")) return LEVEL_ORDER.filter(lvl => byLevel[lvl]);
-      return active.filter(lvl => byLevel[lvl]).sort((a,b)=>LEVEL_ORDER.indexOf(a)-LEVEL_ORDER.indexOf(b));
-    }
-
-    // ---------- View All filtering helpers ----------
-    function updateViewAllFilterUI(){
-      viewAllFilterSeenBtn.classList.toggle("active", viewAllStarFilter === "seen");
-      viewAllFilterUnseenBtn.classList.toggle("active", viewAllStarFilter === "unseen");
-    }
-    function applyViewAllFilters(){
-      if (!viewAllModal.classList.contains("show")) return;
-
-      const q = viewAllSearch.value.trim().toLowerCase();
-      const items = [...viewAllContent.querySelectorAll(".viewall-item")];
-
-      items.forEach(el => {
-        const exId = el.getAttribute("data-example-id");
-        const isSeen = !!userData.seenExamples[exId];
-        const matchesStar =
-          !viewAllStarFilter ||
-          (viewAllStarFilter === "seen" ? isSeen : !isSeen);
-
-        const matchesText = !q || el.textContent.toLowerCase().includes(q);
-
-        el.style.display = (matchesStar && matchesText) ? "" : "none";
-      });
-
-      const sections = [...viewAllContent.querySelectorAll(".level-section")];
-      let anyVisible = false;
-
-      sections.forEach(sec => {
-        const visibleInSection = [...sec.querySelectorAll(".viewall-item")]
-          .some(it => it.style.display !== "none");
-        sec.style.display = visibleInSection ? "" : "none";
-        if (visibleInSection) anyVisible = true;
-      });
-
-      const existing = viewAllContent.querySelector(".viewall-noresults");
-      if (!anyVisible){
-        if (!existing){
-          const msg = document.createElement("div");
-          msg.className = "viewall-noresults";
-          msg.textContent = "No matching items.";
-          viewAllContent.prepend(msg);
-        }
-      } else {
-        if (existing) existing.remove();
-      }
-    }
-    function updateViewAllStar(exampleId, seen){
-      const el = viewAllContent.querySelector(`.star-toggle[data-example-id="${CSS.escape(exampleId)}"]`);
-      if (el) el.classList.toggle("seen", !!seen);
-      applyViewAllFilters();
-    }
-    // ---------- Notes editor / highlighter ----------
-    function applyLevelColorToSelection(level){
-      const color = LEVEL_COLORS[level] || "#e5e7eb";
-      const sel = window.getSelection();
-      if (!sel || sel.rangeCount === 0) return false;
-      const range = sel.getRangeAt(0);
-      if (range.collapsed) return false;
-
-      let node = range.commonAncestorContainer.nodeType === 1 ? range.commonAncestorContainer : range.commonAncestorContainer.parentElement;
-      const editor = node && node.closest ? node.closest('.note-field[contenteditable="true"]') : null;
-      if (!editor) return false;
-
-      editor.focus();
-      try{
-        document.execCommand("styleWithCSS", false, true);
-        document.execCommand("foreColor", false, color);
-        return true;
-      } catch (e){
-        try{
-          const span = document.createElement("span");
-          span.style.color = color;
-          range.surroundContents(span);
-          sel.removeAllRanges();
-          sel.addRange(range);
-          return true;
-        } catch (_){
-          return false;
-        }
-      }
-    }
-
-    function buildExampleSentencesEditor({ level, grammarKey }){
-      const section = document.createElement("div");
-      section.className = "notes-section";
-
-      const list = document.createElement("div");
-      list.className = "notes-list";
-
-      const footer = document.createElement("div");
-      footer.className = "notes-footer";
-
-      const editBtn = document.createElement("button");
-      editBtn.type = "button";
-      editBtn.className = "notes-icon-btn";
-      editBtn.title = "Toggle edit mode";
-      editBtn.setAttribute("aria-label", "Toggle edit mode");
-      editBtn.textContent = "✎";
-
-      const colorBtn = document.createElement("button");
-      colorBtn.type = "button";
-      colorBtn.className = "notes-icon-btn";
-      colorBtn.title = "Color selected text";
-      colorBtn.setAttribute("aria-label", "Color selected text");
-      colorBtn.textContent = "🎨";
-
-      const addBtn = document.createElement("button");
-      addBtn.type = "button";
-      addBtn.className = "notes-add-btn";
-      addBtn.innerHTML = "<span>＋</span><span>Add</span>";
-
-      addBtn.style.display = "none";
-      colorBtn.style.display = "none";
-
-      footer.appendChild(editBtn);
-      footer.appendChild(colorBtn);
-      footer.appendChild(addBtn);
-
-      section.appendChild(list);
-      section.appendChild(footer);
-
-      let editMode = false;
-
-      function getNotes(){
-        if (!Array.isArray(userData.notesByGrammar[grammarKey])) userData.notesByGrammar[grammarKey] = [];
-        userData.notesByGrammar[grammarKey] = userData.notesByGrammar[grammarKey].map(n => ({
-          jpHtml: String(n.jpHtml || ""),
-          enHtml: String(n.enHtml || "")
-        }));
-        return userData.notesByGrammar[grammarKey];
-      }
-
-      function syncFromDOM(){
-        const rows = [...list.querySelectorAll(".note-row")];
-        const newNotes = [];
-        for (const r of rows){
-          const jp = r.querySelector(".note-field.note-jp");
-          const en = r.querySelector(".note-field.note-en");
-          clampEmptyContentEditable(jp);
-          clampEmptyContentEditable(en);
-          const jpText = (jp?.textContent || "").trim();
-          const enText = (en?.textContent || "").trim();
-          if (jpText || enText){
-            newNotes.push({
-              jpHtml: jp ? jp.innerHTML : "",
-              enHtml: en ? en.innerHTML : ""
+              saveHeatmapState();
+              btn.classList.toggle("visited", !!heatmapState.visitedDays[ymd]);
+              renderHeatmapStats();
             });
+
+            btn.addEventListener("mousemove", (ev) => {
+              showTooltip(formatDMYShort(d), ev.clientX, ev.clientY);
+            });
+            btn.addEventListener("mouseleave", hideTooltip);
+
+            hmGrid.appendChild(btn);
           }
         }
-        userData.notesByGrammar[grammarKey] = newNotes;
-        saveUserData();
       }
 
-      function renderNotes(){
-        list.innerHTML = "";
-        const notes = getNotes();
+      function renderHeatmap(){
+        const year = Number(heatmapState.viewYear || new Date().getFullYear());
+        heatmapState.viewYear = year;
+        saveHeatmapState();
 
-        if (notes.length === 0 && !editMode){
-          const hint = document.createElement("div");
-          hint.className = "notes-empty-hint";
-          hint.textContent = "No example sentences yet.";
-          list.appendChild(hint);
+        if (!heatmapState.visible) return;
+        renderYearView(year);
+      }
+
+      // ------------------------------- Notes editor helpers -------------------------------
+      function applyLevelColorToSelection(level){
+        const color = LEVEL_COLORS[level] || "#e5e7eb";
+        const sel = window.getSelection();
+        if (!sel || sel.rangeCount === 0) return false;
+        const range = sel.getRangeAt(0);
+        if (range.collapsed) return false;
+
+        let node = range.commonAncestorContainer.nodeType === 1 ? range.commonAncestorContainer : range.commonAncestorContainer.parentElement;
+        const editor = node && node.closest ? node.closest('.note-field[contenteditable="true"]') : null;
+        if (!editor) return false;
+
+        editor.focus();
+        try{
+          document.execCommand("styleWithCSS", false, true);
+          document.execCommand("foreColor", false, color);
+          return true;
+        } catch (e){
+          try{
+            const span = document.createElement("span");
+            span.style.color = color;
+            range.surroundContents(span);
+            sel.removeAllRanges();
+            sel.addRange(range);
+            return true;
+          } catch (_){
+            return false;
+          }
+        }
+      }
+
+      function looksEnglishLine(s){ return /[A-Za-z]/.test(s); }
+      function toHighlightedHtml(raw, level){
+        const color = LEVEL_COLORS[level] || "#e5e7eb";
+        const parts = String(raw || "").split("#");
+        let out = "";
+        for (let i=0;i<parts.length;i++){
+          const seg = escapeHtml(parts[i]);
+          if (i % 2 === 1) out += `<span style="color:${color};font-weight:800">${seg}</span>`;
+          else out += seg;
+        }
+        return out;
+      }
+
+      function openNotesImportModal({ level, grammarKey, afterApply }){
+        notesImportContext = { level, grammarKey, afterApply };
+        notesImportTextarea.value = "";
+        notesImportModalBackdrop.classList.add("show");
+        notesImportTextarea.focus();
+      }
+      function closeNotesImportModal(){
+        notesImportModalBackdrop.classList.remove("show");
+        notesImportContext = null;
+        notesImportTextarea.value = "";
+      }
+
+      function importNotesFromTextarea(){
+        if (!notesImportContext) return;
+
+        const { level, grammarKey } = notesImportContext;
+        const rawLines = notesImportTextarea.value.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+        if (!rawLines.length){
+          closeNotesImportModal();
           return;
         }
 
-        notes.forEach((note, idx) => {
-          const row = document.createElement("div");
-          row.className = "note-row";
+        // If any line looks English, assume JP/EN alternating pairs.
+        const hasEnglish = rawLines.some(looksEnglishLine);
 
-          const jp = document.createElement("div");
-          jp.className = "note-field note-jp";
-          jp.setAttribute("data-placeholder", "Japanese");
-          jp.contentEditable = editMode ? "true" : "false";
-          jp.innerHTML = note.jpHtml || "";
-          clampEmptyContentEditable(jp);
-
-          const en = document.createElement("div");
-          en.className = "note-field note-en";
-          en.setAttribute("data-placeholder", "English");
-          en.contentEditable = editMode ? "true" : "false";
-          en.innerHTML = note.enHtml || "";
-          clampEmptyContentEditable(en);
-
-          row.appendChild(jp);
-          row.appendChild(en);
-
-          if (editMode){
-            const del = document.createElement("span");
-            del.className = "note-delete-btn";
-            del.title = "Delete";
-            del.textContent = "✕";
-            del.addEventListener("click", (ev) => {
-              ev.stopPropagation();
-              const listNotes = getNotes();
-              listNotes.splice(idx, 1);
-              userData.notesByGrammar[grammarKey] = listNotes;
-              saveUserData();
-              renderNotes();
-            });
-            row.appendChild(del);
-
-            const bind = (el) => {
-              el.addEventListener("input", () => syncFromDOM());
-              el.addEventListener("blur", () => syncFromDOM());
-              el.addEventListener("paste", () => setTimeout(syncFromDOM, 0));
-            };
-            bind(jp); bind(en);
+        const pairs = [];
+        if (!hasEnglish){
+          // JP-only mode: each line becomes a JP-only row, blank EN.
+          rawLines.forEach(jp => pairs.push([jp, ""]));
+        } else {
+          for (let i=0;i<rawLines.length;i+=2){
+            const jp = rawLines[i] || "";
+            const en = rawLines[i+1] || "";
+            pairs.push([jp, en]);
           }
-
-          list.appendChild(row);
-        });
-      }
-
-      editBtn.addEventListener("click", (ev) => {
-        ev.stopPropagation();
-        editMode = !editMode;
-        editBtn.classList.toggle("active", editMode);
-        addBtn.style.display = editMode ? "inline-flex" : "none";
-        colorBtn.style.display = editMode ? "inline-flex" : "none";
-        renderNotes();
-      });
-
-      addBtn.addEventListener("click", (ev) => {
-        ev.stopPropagation();
-        const notes = getNotes();
-        notes.push({ jpHtml: "", enHtml: "" });
-        userData.notesByGrammar[grammarKey] = notes;
-        saveUserData();
-        renderNotes();
-        const last = list.querySelector(".note-row:last-child .note-jp");
-        if (last) last.focus();
-      });
-
-      colorBtn.addEventListener("click", (ev) => {
-        ev.stopPropagation();
-        const ok = applyLevelColorToSelection(level);
-        if (ok) syncFromDOM();
-      });
-
-      section.addEventListener("click", (ev) => ev.stopPropagation());
-
-      renderNotes();
-      return { section, rerender: renderNotes, sync: syncFromDOM };
-    }
-
-    // ---------- date button label ----------
-    function setTodayButtonLabel(viewStr){
-      const todayYMD = dateToYMDString(new Date());
-      if (viewStr === todayYMD){
-        todayBtn.textContent = "Today";
-      } else {
-        const d = new Date(viewStr + "T00:00:00");
-        const dd = String(d.getDate()).padStart(2,"0");
-        const mm = String(d.getMonth()+1).padStart(2,"0");
-        todayBtn.textContent = `${dd}/${mm}`;
-      }
-    }
-
-    // ---------- daily render ----------
-    function render(){
-      const viewStr = viewDateInput.value;
-      if (!viewStr) return;
-
-      const viewDate = new Date(viewStr + "T00:00:00");
-      const offsetDays = daysBetweenSafe(START_DATE, viewDate);
-      infoDate.textContent = viewStr;
-      setTodayButtonLabel(viewStr);
-
-      outputDiv.innerHTML = "";
-      const levelsToShow = getLevelsToShow();
-      if (levelsToShow.length === 0){
-        outputDiv.innerHTML = '<div class="empty-note">No levels selected</div>';
-        return;
-      }
-
-      levelsToShow.forEach(level => {
-        const items = byLevel[level];
-        if (!items || !items.length) return;
-        const perm = permutations[level];
-
-        const slice = mod(offsetDays * ITEMS_PER_DAY, items.length);
-        const indices = [];
-        for (let i=0;i<ITEMS_PER_DAY;i++){
-          indices.push(perm[(slice+i) % items.length]);
         }
 
-        const section = document.createElement("section");
-        section.className = `level-section level-${level}`;
-        section.innerHTML = `
-          <div class="level-heading">
+        if (!Array.isArray(userData.notesByGrammar[grammarKey])) userData.notesByGrammar[grammarKey] = [];
+        pairs.forEach(([jp,en]) => {
+          userData.notesByGrammar[grammarKey].push({
+            jpHtml: toHighlightedHtml(jp, level),
+            enHtml: toHighlightedHtml(en, level)
+          });
+        });
+
+        saveUserData();
+
+        if (typeof notesImportContext.afterApply === "function") notesImportContext.afterApply();
+        closeNotesImportModal();
+      }
+
+      closeNotesImportBtn.addEventListener("click", closeNotesImportModal);
+      cancelNotesImportBtn.addEventListener("click", closeNotesImportModal);
+      notesImportModalBackdrop.addEventListener("click", (ev) => {
+        if (ev.target === notesImportModalBackdrop) closeNotesImportModal();
+      });
+      applyNotesImportBtn.addEventListener("click", importNotesFromTextarea);
+
+      function buildExampleSentencesEditor({ level, grammarKey }){
+        const section = document.createElement("div");
+        section.className = "notes-section";
+
+        const list = document.createElement("div");
+        list.className = "notes-list";
+
+        const footer = document.createElement("div");
+        footer.className = "notes-footer";
+
+        const editBtn = document.createElement("button");
+        editBtn.type = "button";
+        editBtn.className = "notes-icon-btn";
+        editBtn.title = "Toggle edit mode";
+        editBtn.setAttribute("aria-label", "Toggle edit mode");
+        editBtn.textContent = "✎";
+
+        // EN toggle (per dropdown)
+        const enBtn = document.createElement("button");
+        enBtn.type = "button";
+        enBtn.className = "notes-icon-btn notes-en-toggle";
+        enBtn.title = "Toggle English (this dropdown)";
+        enBtn.setAttribute("aria-label", "Toggle English (this dropdown)");
+        enBtn.textContent = "EN";
+
+        const colorBtn = document.createElement("button");
+        colorBtn.type = "button";
+        colorBtn.className = "notes-icon-btn";
+        colorBtn.title = "Color selected text";
+        colorBtn.setAttribute("aria-label", "Color selected text");
+        colorBtn.textContent = "🎨";
+
+        const importBtn = document.createElement("button");
+        importBtn.type = "button";
+        importBtn.className = "notes-icon-btn";
+        importBtn.title = "Import sentences";
+        importBtn.setAttribute("aria-label", "Import sentences");
+        importBtn.textContent = "📄";
+
+        const addBtn = document.createElement("button");
+        addBtn.type = "button";
+        addBtn.className = "notes-add-btn";
+        addBtn.innerHTML = "<span>＋</span><span>Add</span>";
+
+        // Only visible in edit mode
+        addBtn.style.display = "none";
+        colorBtn.style.display = "none";
+        importBtn.style.display = "none";
+
+        footer.appendChild(editBtn);
+        footer.appendChild(enBtn);
+        footer.appendChild(colorBtn);
+        footer.appendChild(importBtn);
+        footer.appendChild(addBtn);
+
+        section.appendChild(list);
+        section.appendChild(footer);
+
+        let editMode = false;
+
+        // per-dropdown english visibility state (does not affect other dropdowns)
+        let englishHidden = false;
+        let defaultApplied = false;
+
+        function setEnglishHidden(hidden){
+          englishHidden = !!hidden;
+          section.classList.toggle("en-hidden", englishHidden);
+          enBtn.classList.toggle("showing", !englishHidden);
+        }
+
+        function ensureDefaultApplied(){
+          if (defaultApplied) return;
+          defaultApplied = true;
+          setEnglishHidden(!!hideEnglishDefault);
+        }
+
+        function getNotes(){
+          if (!Array.isArray(userData.notesByGrammar[grammarKey])) userData.notesByGrammar[grammarKey] = [];
+          userData.notesByGrammar[grammarKey] = userData.notesByGrammar[grammarKey].map(n => ({
+            jpHtml: String(n.jpHtml || ""),
+            enHtml: String(n.enHtml || "")
+          }));
+          return userData.notesByGrammar[grammarKey];
+        }
+
+        function syncFromDOM(){
+          const rows = [...list.querySelectorAll(".note-row")];
+          const newNotes = [];
+          for (const r of rows){
+            const jp = r.querySelector(".note-field.note-jp");
+            const en = r.querySelector(".note-field.note-en");
+            clampEmptyContentEditable(jp);
+            clampEmptyContentEditable(en);
+            const jpText = (jp?.textContent || "").trim();
+            const enText = (en?.textContent || "").trim();
+            if (jpText || enText){
+              newNotes.push({
+                jpHtml: jp ? jp.innerHTML : "",
+                enHtml: en ? en.innerHTML : ""
+              });
+            }
+          }
+          userData.notesByGrammar[grammarKey] = newNotes;
+          saveUserData();
+        }
+
+        function render(){
+          list.innerHTML = "";
+          const notes = getNotes();
+
+          if (notes.length === 0 && !editMode){
+            const hint = document.createElement("div");
+            hint.className = "notes-empty-hint";
+            hint.textContent = "No example sentences yet.";
+            list.appendChild(hint);
+            return;
+          }
+
+          notes.forEach((note, idx) => {
+            const row = document.createElement("div");
+            row.className = "note-row";
+
+            const jp = document.createElement("div");
+            jp.className = "note-field note-jp";
+            jp.setAttribute("data-placeholder", "Japanese");
+            jp.contentEditable = editMode ? "true" : "false";
+            jp.innerHTML = note.jpHtml || "";
+            clampEmptyContentEditable(jp);
+
+            const en = document.createElement("div");
+            en.className = "note-field note-en";
+            en.setAttribute("data-placeholder", "English");
+            en.contentEditable = editMode ? "true" : "false";
+            en.innerHTML = note.enHtml || "";
+            clampEmptyContentEditable(en);
+
+            row.appendChild(jp);
+            row.appendChild(en);
+
+            if (editMode){
+              const del = document.createElement("span");
+              del.className = "note-delete-btn";
+              del.title = "Delete";
+              del.textContent = "✕";
+              del.addEventListener("click", (ev) => {
+                ev.stopPropagation();
+                const listNotes = getNotes();
+                listNotes.splice(idx, 1);
+                userData.notesByGrammar[grammarKey] = listNotes;
+                saveUserData();
+                render();
+              });
+              row.appendChild(del);
+
+              const bind = (el) => {
+                el.addEventListener("input", () => syncFromDOM());
+                el.addEventListener("blur", () => syncFromDOM());
+                el.addEventListener("paste", () => setTimeout(syncFromDOM, 0));
+              };
+              bind(jp); bind(en);
+            }
+
+            list.appendChild(row);
+          });
+        }
+
+        editBtn.addEventListener("click", (ev) => {
+          ev.stopPropagation();
+          editMode = !editMode;
+          editBtn.classList.toggle("active", editMode);
+
+          addBtn.style.display = editMode ? "inline-flex" : "none";
+          colorBtn.style.display = editMode ? "inline-flex" : "none";
+          importBtn.style.display = editMode ? "inline-flex" : "none";
+
+          render();
+        });
+
+        enBtn.addEventListener("click", (ev) => {
+          ev.stopPropagation();
+          // only for this dropdown
+          setEnglishHidden(!englishHidden);
+        });
+
+        addBtn.addEventListener("click", (ev) => {
+          ev.stopPropagation();
+          const notes = getNotes();
+          notes.push({ jpHtml: "", enHtml: "" });
+          userData.notesByGrammar[grammarKey] = notes;
+          saveUserData();
+          render();
+          const last = list.querySelector(".note-row:last-child .note-jp");
+          if (last) last.focus();
+        });
+
+        colorBtn.addEventListener("click", (ev) => {
+          ev.stopPropagation();
+          const ok = applyLevelColorToSelection(level);
+          if (ok) syncFromDOM();
+        });
+
+        importBtn.addEventListener("click", (ev) => {
+          ev.stopPropagation();
+          openNotesImportModal({
+            level,
+            grammarKey,
+            afterApply: () => render()
+          });
+        });
+
+        // prevent outer toggles from seeing clicks inside notes area
+        section.addEventListener("click", (ev) => ev.stopPropagation());
+
+        // initial EN UI state (will be set on open)
+        setEnglishHidden(false);
+
+        render();
+        return { section, rerender: render, sync: syncFromDOM, ensureDefaultApplied };
+      }
+
+      // ------------------------------- View All filtering -------------------------------
+      function updateViewAllFilterUI(){
+        viewAllFilterSeenBtn.classList.toggle("active", viewAllStarFilter === "seen");
+        viewAllFilterUnseenBtn.classList.toggle("active", viewAllStarFilter === "unseen");
+      }
+
+      function applyViewAllFilters(){
+        if (!viewAllModal.classList.contains("show")) return;
+
+        const q = viewAllSearch.value.trim().toLowerCase();
+        const items = [...viewAllContent.querySelectorAll(".viewall-item")];
+
+        items.forEach(el => {
+          const exId = el.getAttribute("data-example-id");
+          const isSeen = !!userData.seenExamples[exId];
+          const matchesStar =
+            !viewAllStarFilter ||
+            (viewAllStarFilter === "seen" ? isSeen : !isSeen);
+
+          const matchesText = !q || el.textContent.toLowerCase().includes(q);
+
+          el.style.display = (matchesStar && matchesText) ? "" : "none";
+        });
+
+        const sections = [...viewAllContent.querySelectorAll(".level-section")];
+        let anyVisible = false;
+
+        sections.forEach(sec => {
+          const visibleInSection = [...sec.querySelectorAll(".viewall-item")]
+            .some(it => it.style.display !== "none");
+          sec.style.display = visibleInSection ? "" : "none";
+          if (visibleInSection) anyVisible = true;
+        });
+
+        const existing = viewAllContent.querySelector(".viewall-noresults");
+        if (!anyVisible){
+          if (!existing){
+            const msg = document.createElement("div");
+            msg.className = "viewall-noresults";
+            msg.textContent = "No matching items.";
+            viewAllContent.prepend(msg);
+          }
+        } else {
+          if (existing) existing.remove();
+        }
+      }
+
+      function buildScoreWrap(exampleId){
+        const wrap = document.createElement("span");
+        wrap.className = "score-wrap";
+        wrap.setAttribute("data-example-id", exampleId);
+
+        const dec = document.createElement("button");
+        dec.type = "button";
+        dec.className = "score-arrow dec";
+        dec.setAttribute("aria-label","Decrease score");
+        dec.textContent = "‹";
+
+        const em = document.createElement("span");
+        em.className = "score-emoji";
+        em.setAttribute("data-example-id", exampleId);
+
+        const inc = document.createElement("button");
+        inc.type = "button";
+        inc.className = "score-arrow inc";
+        inc.setAttribute("aria-label","Increase score");
+        inc.textContent = "›";
+
+        wrap.appendChild(dec);
+        wrap.appendChild(em);
+        wrap.appendChild(inc);
+
+        setScoreEmojiInWrap(wrap, exampleId);
+
+        em.addEventListener("mousemove", (ev) => showTooltip(scoreTooltipText(getScore(exampleId)), ev.clientX, ev.clientY));
+        em.addEventListener("mouseleave", hideTooltip);
+
+        em.addEventListener("click", (ev) => {
+          ev.stopPropagation();
+          closeAllScorePickers();
+          wrap.classList.add("editing");
+          setScoreEmojiInWrap(wrap, exampleId);
+        });
+        dec.addEventListener("click", (ev) => {
+          ev.stopPropagation();
+          const cur = getScore(exampleId);
+          if (cur > 0) setScore(exampleId, cur - 1);
+          wrap.classList.add("editing");
+          updateScoreUIEverywhere(exampleId);
+        });
+        inc.addEventListener("click", (ev) => {
+          ev.stopPropagation();
+          const cur = getScore(exampleId);
+          if (cur < SCORE_MAX) setScore(exampleId, cur + 1);
+          wrap.classList.add("editing");
+          updateScoreUIEverywhere(exampleId);
+        });
+
+        wrap.addEventListener("click", (ev) => ev.stopPropagation());
+        return wrap;
+      }
+
+      // ------------------------------- Main render (daily view) -------------------------------
+      function render(){
+        const viewStr = viewDateInput.value;
+        if (!viewStr) return;
+
+        const viewDate = new Date(viewStr + "T00:00:00");
+        const offsetDays = daysBetweenSafe(START_DATE, viewDate);
+        infoDate.textContent = viewStr;
+        setTodayButtonLabel(viewStr);
+
+        outputDiv.innerHTML = "";
+        const levelsToShow = getLevelsToShow();
+        if (levelsToShow.length === 0){
+          outputDiv.innerHTML = '<div class="empty-note">No levels selected</div>';
+          return;
+        }
+
+        levelsToShow.forEach(level => {
+          const items = byLevel[level];
+          if (!items || !items.length) return;
+          const perm = permutations[level];
+
+          const slice = mod(offsetDays * ITEMS_PER_DAY, items.length);
+          const indices = [];
+          for (let i=0;i<ITEMS_PER_DAY;i++){
+            indices.push(perm[(slice+i) % items.length]);
+          }
+
+          const section = document.createElement("section");
+          section.className = `level-section level-${level}`;
+          section.innerHTML = `
+            <div class="level-heading">
+              <div class="level-left">
+                <div class="level-pill"></div>
+                <div class="level-title">${level}</div>
+              </div>
+            </div>
+            <div class="level-body ${expandedSections[level] ? "expanded" : ""}"></div>
+          `;
+          const body = section.querySelector(".level-body");
+
+          indices.forEach(idx => {
+            const item = items[idx];
+            const exampleId = `${item.level}_${item.index}`;
+            const grammarKey = `${item.level}_${item.grammar}`;
+            const seen = !!userData.seenExamples[exampleId];
+
+            const grammarLink = item.primaryLink
+              ? `<a href="${item.primaryLink}" target="_blank" rel="noopener">${escapeHtml(item.grammar)}</a>`
+              : escapeHtml(item.grammar);
+
+            const extraLinkIcons = (item.extraLinks || []).map((link,i) =>
+              `<a href="${link}" target="_blank" rel="noopener" class="extra-link" title="Link ${i+2}">↗</a>`
+            ).join("");
+
+            const card = document.createElement("div");
+            card.className = "grammar-item";
+            card.innerHTML = `
+              <div class="grammar-main-area">
+                <div class="grammar-info">
+                  <div class="grammar-main">${grammarLink}${extraLinkIcons}</div>
+                  <div class="grammar-meaning">${escapeHtml(item.meaning || "")}</div>
+                </div>
+                <div class="grammar-right-controls">
+                  <span class="star-toggle ${seen ? "seen" : ""}" title="Mark as seen">★</span>
+                </div>
+              </div>
+            `;
+
+            // Score (insert left of star)
+            const controls = card.querySelector(".grammar-right-controls");
+            const starEl = card.querySelector(".star-toggle");
+            const scoreWrap = buildScoreWrap(exampleId);
+            controls.insertBefore(scoreWrap, starEl);
+
+            const notes = buildExampleSentencesEditor({ level: item.level, grammarKey });
+            notes.section.hidden = true;
+            card.appendChild(notes.section);
+
+            starEl.addEventListener("click", (ev) => {
+              ev.stopPropagation();
+              const cur = !!userData.seenExamples[exampleId];
+              if (cur) delete userData.seenExamples[exampleId];
+              else userData.seenExamples[exampleId] = true;
+              starEl.classList.toggle("seen", !cur);
+              saveUserData();
+            });
+
+            const mainArea = card.querySelector(".grammar-main-area");
+            mainArea.addEventListener("click", () => {
+              const willOpen = notes.section.hidden;
+              notes.section.hidden = !notes.section.hidden;
+              if (willOpen) notes.ensureDefaultApplied();
+            });
+
+            body.appendChild(card);
+          });
+
+          const header = section.querySelector(".level-heading");
+          header.addEventListener("click", () => {
+            const isExpanded = body.classList.toggle("expanded");
+            expandedSections[level] = isExpanded;
+            saveState();
+          });
+
+          outputDiv.appendChild(section);
+        });
+
+        // ensure score feature is applied immediately
+        document.body.classList.toggle("no-scores", !scoresEnabled);
+      }
+      // ------------------------------- Date controls -------------------------------
+      viewDateInput.value = dateToYMDString(new Date());
+      setTodayButtonLabel(viewDateInput.value);
+
+      prevBtn.addEventListener("click", () => {
+        const d = new Date(viewDateInput.value + "T00:00:00");
+        d.setDate(d.getDate() - 1);
+        viewDateInput.value = dateToYMDString(d);
+        render();
+      });
+      nextBtn.addEventListener("click", () => {
+        const d = new Date(viewDateInput.value + "T00:00:00");
+        d.setDate(d.getDate() + 1);
+        viewDateInput.value = dateToYMDString(d);
+        render();
+      });
+      todayBtn.addEventListener("click", () => {
+        // Only "Today" should count as a visit in the heatmap (real system date)
+        viewDateInput.value = dateToYMDString(new Date());
+        render();
+      });
+      openCalendarBtn.addEventListener("click", () => {
+        viewDateInput.showPicker?.() || viewDateInput.click();
+      });
+      viewDateInput.addEventListener("change", render);
+
+      // click anywhere closes emoji pickers
+      document.addEventListener("click", () => closeAllScorePickers());
+
+      // ------------------------------- Filters -------------------------------
+      filterButtons.forEach(btn => {
+        btn.addEventListener("click", () => {
+          const level = btn.dataset.level;
+          activeFilters[level] = !activeFilters[level];
+
+          if (level === "ALL"){
+            const allOn = activeFilters.ALL;
+            LEVEL_ORDER.forEach(lvl => {
+              activeFilters[lvl] = allOn;
+              expandedSections[lvl] = allOn;
+            });
+          } else {
+            activeFilters.ALL = LEVEL_ORDER.every(lvl => activeFilters[lvl]);
+            expandedSections[level] = activeFilters[level];
+          }
+
+          saveState();
+          updateFilterButtons();
+          render();
+        });
+      });
+
+      // ------------------------------- Settings modal -------------------------------
+      function openSettings(){ settingsModalBackdrop.classList.add("show"); }
+      function closeSettings(){ settingsModalBackdrop.classList.remove("show"); }
+      openSettingsBtn.addEventListener("click", openSettings);
+      closeSettingsBtn.addEventListener("click", closeSettings);
+      settingsModalBackdrop.addEventListener("click", (ev) => {
+        if (ev.target === settingsModalBackdrop) closeSettings();
+      });
+
+      // Apply settings UI initial states
+      toggleHideEnglishNotes.checked = !!hideEnglishDefault;
+      toggleEmojiScores.checked = !!scoresEnabled;
+
+      toggleHideEnglishNotes.addEventListener("change", () => {
+        hideEnglishDefault = !!toggleHideEnglishNotes.checked;
+        saveGlobalSettings();
+      });
+
+      toggleEmojiScores.addEventListener("change", () => {
+        setScoresEnabled(!!toggleEmojiScores.checked);
+        render();
+        if (viewAllModal.classList.contains("show")) buildViewAll();
+      });
+
+      // ------------------------------- Export / Import -------------------------------
+      exportDataBtn.addEventListener("click", () => {
+        const payload = {
+          seenExamples: userData.seenExamples,
+          notesByGrammar: userData.notesByGrammar,
+          scoresByExample: userData.scoresByExample,
+          settings: {
+            hideEnglishDefault,
+            scoresEnabled
+          },
+          heatmap: {
+            visible: heatmapState.visible,
+            viewYear: heatmapState.viewYear,
+            showMonthTitles: heatmapState.showMonthTitles,
+            showFirstVisit: heatmapState.showFirstVisit,
+            showStreak: heatmapState.showStreak,
+            showTotal: heatmapState.showTotal,
+            paletteKey: heatmapState.paletteKey,
+            visitedDays: heatmapState.visitedDays
+          }
+        };
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type:"application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "jlpt-user-data.json";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      });
+
+      importDataBtn.addEventListener("click", () => importFileInput.click());
+      importFileInput.addEventListener("change", (ev) => {
+        const file = ev.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try{
+            const parsed = JSON.parse(e.target.result);
+
+            // core user data
+            userData.seenExamples = parsed.seenExamples || {};
+            userData.notesByGrammar = parsed.notesByGrammar || {};
+            userData.scoresByExample = parsed.scoresByExample || {};
+            migrateNotesShape();
+            migrateScoresShape();
+            saveUserData();
+
+            // global settings (optional)
+            if (parsed.settings && typeof parsed.settings === "object"){
+              if (typeof parsed.settings.hideEnglishDefault === "boolean") hideEnglishDefault = parsed.settings.hideEnglishDefault;
+              if (typeof parsed.settings.scoresEnabled === "boolean") scoresEnabled = parsed.settings.scoresEnabled;
+              saveGlobalSettings();
+            }
+
+            // heatmap (optional)
+            if (parsed.heatmap && typeof parsed.heatmap === "object"){
+              heatmapState.visible = !!parsed.heatmap.visible;
+              heatmapState.viewYear = Number(parsed.heatmap.viewYear || heatmapState.viewYear);
+              heatmapState.showMonthTitles = !!parsed.heatmap.showMonthTitles;
+              heatmapState.showFirstVisit = (typeof parsed.heatmap.showFirstVisit === "boolean") ? parsed.heatmap.showFirstVisit : heatmapState.showFirstVisit;
+              heatmapState.showStreak = (typeof parsed.heatmap.showStreak === "boolean") ? parsed.heatmap.showStreak : heatmapState.showStreak;
+              heatmapState.showTotal = (typeof parsed.heatmap.showTotal === "boolean") ? parsed.heatmap.showTotal : heatmapState.showTotal;
+              heatmapState.paletteKey = parsed.heatmap.paletteKey || heatmapState.paletteKey;
+              heatmapState.visitedDays = parsed.heatmap.visitedDays || heatmapState.visitedDays || {};
+              saveHeatmapState();
+            }
+
+            // update UI from imported values
+            toggleHideEnglishNotes.checked = !!hideEnglishDefault;
+            toggleEmojiScores.checked = !!scoresEnabled;
+            setScoresEnabled(scoresEnabled);
+
+            toggleHeatmapVisible.checked = !!heatmapState.visible;
+            applyHeatmapVisibility();
+            applyHeatmapPalette();
+            applyHeatmapStatsUI();
+            renderPaletteOptions();
+            renderHeatmapStats();
+            renderHeatmap();
+
+            render();
+            if (viewAllModal.classList.contains("show")) buildViewAll();
+            applyViewAllFilters();
+          } catch (_){
+            alert("Invalid JSON file.");
+          }
+        };
+        reader.readAsText(file);
+        importFileInput.value = "";
+      });
+
+      // ------------------------------- View All modal -------------------------------
+      function openViewAll(){
+        buildViewAll();
+        viewAllModal.classList.add("show");
+        updateViewAllFilterUI();
+        applyViewAllFilters();
+        viewAllSearch.focus();
+      }
+      function closeViewAll(){ viewAllModal.classList.remove("show"); }
+      openViewAllBtn.addEventListener("click", openViewAll);
+      closeViewAllBtn.addEventListener("click", closeViewAll);
+      viewAllModal.addEventListener("click", (ev) => {
+        if (ev.target === viewAllModal) closeViewAll();
+      });
+
+      function buildViewAll(){
+        viewAllContent.innerHTML = "";
+
+        for (const level of LEVEL_ORDER){
+          const items = byLevel[level];
+          if (!items || !items.length) continue;
+
+          const section = document.createElement("section");
+          section.className = `level-section level-${level}`;
+
+          const head = document.createElement("div");
+          head.className = "viewall-level-heading";
+          head.innerHTML = `
             <div class="level-left">
               <div class="level-pill"></div>
               <div class="level-title">${level}</div>
             </div>
-          </div>
-          <div class="level-body ${expandedSections[level] ? "expanded" : ""}"></div>
-        `;
-        const body = section.querySelector(".level-body");
-
-        indices.forEach(idx => {
-          const item = items[idx];
-          const exampleId = `${item.level}_${item.index}`;
-          const grammarKey = `${item.level}_${item.grammar}`;
-          const seen = !!userData.seenExamples[exampleId];
-
-          const grammarLink = item.primaryLink
-            ? `<a href="${item.primaryLink}" target="_blank" rel="noopener">${escapeHtml(item.grammar)}</a>`
-            : escapeHtml(item.grammar);
-
-          const extraLinkIcons = (item.extraLinks || []).map((link,i) =>
-            `<a href="${link}" target="_blank" rel="noopener" class="extra-link" title="Link ${i+2}">↗</a>`
-          ).join("");
-
-          const card = document.createElement("div");
-          card.className = "grammar-item";
-          card.innerHTML = `
-            <div class="grammar-main-area">
-              <div class="grammar-info">
-                <div class="grammar-main">${grammarLink}${extraLinkIcons}</div>
-                <div class="grammar-meaning">${escapeHtml(item.meaning || "")}</div>
-              </div>
-              <div class="grammar-right-controls">
-                <span class="star-toggle ${seen ? "seen" : ""}" title="Mark as seen">★</span>
-              </div>
-            </div>
           `;
+          section.appendChild(head);
 
-          const notes = buildExampleSentencesEditor({ level: item.level, grammarKey });
-          notes.section.hidden = true;
-          card.appendChild(notes.section);
+          const body = document.createElement("div");
+          body.className = "viewall-level-body";
 
-          const starEl = card.querySelector(".star-toggle");
-          starEl.addEventListener("click", (ev) => {
-            ev.stopPropagation();
-            const cur = !!userData.seenExamples[exampleId];
-            if (cur) delete userData.seenExamples[exampleId];
-            else userData.seenExamples[exampleId] = true;
-            starEl.classList.toggle("seen", !cur);
-            saveUserData();
-            updateViewAllStar(exampleId, !cur);
-          });
+          items.forEach(item => {
+            const exampleId = `${item.level}_${item.index}`;
+            const grammarKey = `${item.level}_${item.grammar}`;
+            const seen = !!userData.seenExamples[exampleId];
 
-          const mainArea = card.querySelector(".grammar-main-area");
-          mainArea.addEventListener("click", () => {
-            notes.section.hidden = !notes.section.hidden;
-          });
+            const itemEl = document.createElement("div");
+            itemEl.className = "viewall-item";
+            itemEl.setAttribute("data-example-id", exampleId);
+            itemEl.setAttribute("data-grammar-key", grammarKey);
 
-          body.appendChild(card);
-        });
+            const titleHtml = item.primaryLink
+              ? `<a href="${item.primaryLink}" target="_blank" rel="noopener">${escapeHtml(item.grammar)}</a>`
+              : escapeHtml(item.grammar);
 
-        const header = section.querySelector(".level-heading");
-        header.addEventListener("click", () => {
-          const isExpanded = body.classList.toggle("expanded");
-          expandedSections[level] = isExpanded;
-          saveState();
-        });
+            itemEl.innerHTML = `
+              <div class="viewall-item-header">
+                <div>
+                  <div class="viewall-item-title">${titleHtml}</div>
+                  <div class="viewall-item-meaning">${escapeHtml(item.meaning || "")}</div>
+                </div>
+                <div class="viewall-item-controls">
+                  <span class="star-toggle ${seen ? "seen" : ""}" data-example-id="${exampleId}" title="Mark as seen">★</span>
+                  <span class="viewall-toggle">＋</span>
+                </div>
+              </div>
+            `;
 
-        outputDiv.appendChild(section);
-      });
+            // insert score before star icon
+            const controls = itemEl.querySelector(".viewall-item-controls");
+            const starEl = itemEl.querySelector(".star-toggle");
+            const scoreWrap = buildScoreWrap(exampleId);
+            controls.insertBefore(scoreWrap, starEl);
 
-      updateHeatmapStats(); // ensures tooltip math matches filter changes
-    }
+            const notes = buildExampleSentencesEditor({ level: item.level, grammarKey });
+            notes.section.hidden = true;
+            itemEl.appendChild(notes.section);
 
-    // ---------- Date controls ----------
-    viewDateInput.value = dateToYMDString(new Date());
-    setTodayButtonLabel(viewDateInput.value);
-
-    prevBtn.addEventListener("click", () => {
-      const d = new Date(viewDateInput.value + "T00:00:00");
-      d.setDate(d.getDate() - 1);
-      viewDateInput.value = dateToYMDString(d);
-      render();
-    });
-    nextBtn.addEventListener("click", () => {
-      const d = new Date(viewDateInput.value + "T00:00:00");
-      d.setDate(d.getDate() + 1);
-      viewDateInput.value = dateToYMDString(d);
-      render();
-    });
-    todayBtn.addEventListener("click", () => {
-      viewDateInput.value = dateToYMDString(new Date());
-      render();
-    });
-    openCalendarBtn.addEventListener("click", () => {
-      viewDateInput.showPicker?.() || viewDateInput.click();
-    });
-    viewDateInput.addEventListener("change", render);
-
-    // ---------- Filters ----------
-    filterButtons.forEach(btn => {
-      btn.addEventListener("click", () => {
-        const level = btn.dataset.level;
-        activeFilters[level] = !activeFilters[level];
-
-        if (level === "ALL"){
-          const allOn = activeFilters.ALL;
-          LEVEL_ORDER.forEach(lvl => {
-            activeFilters[lvl] = allOn;
-            expandedSections[lvl] = allOn;
-          });
-        } else {
-          activeFilters.ALL = LEVEL_ORDER.every(lvl => activeFilters[lvl]);
-          expandedSections[level] = activeFilters[level];
-        }
-
-        saveState();
-        updateFilterButtons();
-        render();
-      });
-    });
-
-    // ---------- Settings modal ----------
-    function openSettings(){
-      toggleHeatmapVisible.checked = !!heatmapState.visible;
-      settingsModalBackdrop.classList.add("show");
-    }
-    function closeSettings(){ settingsModalBackdrop.classList.remove("show"); }
-    openSettingsBtn.addEventListener("click", openSettings);
-    closeSettingsBtn.addEventListener("click", closeSettings);
-    settingsModalBackdrop.addEventListener("click", (ev) => {
-      if (ev.target === settingsModalBackdrop) closeSettings();
-    });
-
-    // ---------- Export / Import (includes month view + month titles) ----------
-    exportDataBtn.addEventListener("click", () => {
-      const payload = {
-        version: 3,
-        userData: {
-          seenExamples: userData.seenExamples,
-          notesByGrammar: userData.notesByGrammar
-        },
-        uiState: {
-          activeFilters,
-          expandedSections
-        },
-        heatmap: {
-          visible: !!heatmapState.visible,
-          monthView: !!heatmapState.monthView,
-          showMonthTitles: !!heatmapState.showMonthTitles,
-
-          showFirstVisit: !!heatmapState.showFirstVisit,
-          showStreak: !!heatmapState.showStreak,
-          showTotal: !!heatmapState.showTotal,
-
-          paletteId: heatmapState.paletteId,
-          visitedDays: heatmapState.visitedDays,
-          viewYear: heatmapState.viewYear
-        }
-      };
-      const blob = new Blob([JSON.stringify(payload, null, 2)], { type:"application/json" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "jlpt-user-data.json";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    });
-
-    importDataBtn.addEventListener("click", () => importFileInput.click());
-    importFileInput.addEventListener("change", (ev) => {
-      const file = ev.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        try{
-          const parsed = JSON.parse(e.target.result);
-
-          // Back-compat: very old exports were {seenExamples, notesByGrammar}
-          if (parsed && (parsed.seenExamples || parsed.notesByGrammar) && !parsed.userData){
-            userData.seenExamples = parsed.seenExamples || {};
-            userData.notesByGrammar = parsed.notesByGrammar || {};
-            migrateNotesShape();
-            saveUserData();
-          } else {
-            if (parsed.userData){
-              userData.seenExamples = parsed.userData.seenExamples || {};
-              userData.notesByGrammar = parsed.userData.notesByGrammar || {};
-              migrateNotesShape();
+            starEl.addEventListener("click", (ev) => {
+              ev.stopPropagation();
+              const cur = !!userData.seenExamples[exampleId];
+              if (cur) delete userData.seenExamples[exampleId];
+              else userData.seenExamples[exampleId] = true;
+              starEl.classList.toggle("seen", !cur);
               saveUserData();
+              applyViewAllFilters();
+            });
+
+            const toggleEl = itemEl.querySelector(".viewall-toggle");
+            const headerEl = itemEl.querySelector(".viewall-item-header");
+            function setOpen(open){
+              notes.section.hidden = !open;
+              toggleEl.textContent = open ? "－" : "＋";
+              toggleEl.classList.toggle("open", open);
+              if (open) notes.ensureDefaultApplied();
             }
+            headerEl.addEventListener("click", () => setOpen(notes.section.hidden));
 
-            if (parsed.uiState){
-              activeFilters = parsed.uiState.activeFilters || activeFilters;
-              expandedSections = parsed.uiState.expandedSections || expandedSections;
-              localStorage.setItem(FILTER_KEY, JSON.stringify(activeFilters));
-              localStorage.setItem(EXPAND_KEY, JSON.stringify(expandedSections));
-            }
-
-            if (parsed.heatmap){
-              heatmapState.visible = !!parsed.heatmap.visible;
-
-              heatmapState.monthView = !!parsed.heatmap.monthView;
-              heatmapState.showMonthTitles = (parsed.heatmap.showMonthTitles !== undefined)
-                ? !!parsed.heatmap.showMonthTitles
-                : heatmapState.showMonthTitles;
-
-              heatmapState.showFirstVisit = (parsed.heatmap.showFirstVisit !== undefined) ? !!parsed.heatmap.showFirstVisit : heatmapState.showFirstVisit;
-              heatmapState.showStreak = (parsed.heatmap.showStreak !== undefined) ? !!parsed.heatmap.showStreak : heatmapState.showStreak;
-              heatmapState.showTotal = (parsed.heatmap.showTotal !== undefined) ? !!parsed.heatmap.showTotal : heatmapState.showTotal;
-
-              heatmapState.paletteId = parsed.heatmap.paletteId || heatmapState.paletteId;
-              heatmapState.visitedDays = parsed.heatmap.visitedDays || heatmapState.visitedDays;
-              heatmapState.viewYear = Number.isFinite(parsed.heatmap.viewYear) ? parsed.heatmap.viewYear : heatmapState.viewYear;
-
-              saveHeatmapState();
-            }
-          }
-
-          applyHeatmapPalette();
-          applyHeatmapVisibility();
-
-          toggleHeatmapVisible.checked = !!heatmapState.visible;
-
-          hmMonthView.checked = !!heatmapState.monthView;
-          hmShowMonthTitles.checked = !!heatmapState.showMonthTitles;
-
-          hmShowFirstVisit.checked = !!heatmapState.showFirstVisit;
-          hmShowStreak.checked = !!heatmapState.showStreak;
-          hmShowTotal.checked = !!heatmapState.showTotal;
-
-          renderPaletteOptions();
-          updateHeatmapStats();
-          renderHeatmap();
-
-          updateFilterButtons();
-          render();
-          if (viewAllModal.classList.contains("show")) buildViewAll();
-          applyViewAllFilters();
-        } catch (_){
-          alert("Invalid JSON file.");
-        }
-      };
-      reader.readAsText(file);
-      importFileInput.value = "";
-    });
-
-    // ---------- View All modal ----------
-    function openViewAll(){
-      buildViewAll();
-      viewAllModal.classList.add("show");
-      updateViewAllFilterUI();
-      applyViewAllFilters();
-      viewAllSearch.focus();
-    }
-    function closeViewAll(){ viewAllModal.classList.remove("show"); }
-    openViewAllBtn.addEventListener("click", openViewAll);
-    closeViewAllBtn.addEventListener("click", closeViewAll);
-    viewAllModal.addEventListener("click", (ev) => {
-      if (ev.target === viewAllModal) closeViewAll();
-    });
-
-    function buildViewAll(){
-      viewAllContent.innerHTML = "";
-
-      for (const level of LEVEL_ORDER){
-        const items = byLevel[level];
-        if (!items || !items.length) continue;
-
-        const section = document.createElement("section");
-        section.className = `level-section level-${level}`;
-
-        const head = document.createElement("div");
-        head.className = "viewall-level-heading";
-        head.innerHTML = `
-          <div class="level-left">
-            <div class="level-pill"></div>
-            <div class="level-title">${level}</div>
-          </div>
-        `;
-        section.appendChild(head);
-
-        const body = document.createElement("div");
-        body.className = "viewall-level-body";
-
-        items.forEach(item => {
-          const exampleId = `${item.level}_${item.index}`;
-          const grammarKey = `${item.level}_${item.grammar}`;
-          const seen = !!userData.seenExamples[exampleId];
-
-          const itemEl = document.createElement("div");
-          itemEl.className = "viewall-item";
-          itemEl.setAttribute("data-example-id", exampleId);
-          itemEl.setAttribute("data-grammar-key", grammarKey);
-
-          const titleHtml = item.primaryLink
-            ? `<a href="${item.primaryLink}" target="_blank" rel="noopener">${escapeHtml(item.grammar)}</a>`
-            : escapeHtml(item.grammar);
-
-          itemEl.innerHTML = `
-            <div class="viewall-item-header">
-              <div>
-                <div class="viewall-item-title">${titleHtml}</div>
-                <div class="viewall-item-meaning">${escapeHtml(item.meaning || "")}</div>
-              </div>
-              <div class="viewall-item-controls">
-                <span class="star-toggle ${seen ? "seen" : ""}" data-example-id="${exampleId}" title="Mark as seen">★</span>
-                <span class="viewall-toggle">＋</span>
-              </div>
-            </div>
-          `;
-
-          const notes = buildExampleSentencesEditor({ level: item.level, grammarKey });
-          notes.section.hidden = true;
-          itemEl.appendChild(notes.section);
-
-          const starEl = itemEl.querySelector(".star-toggle");
-          starEl.addEventListener("click", (ev) => {
-            ev.stopPropagation();
-            const cur = !!userData.seenExamples[exampleId];
-            if (cur) delete userData.seenExamples[exampleId];
-            else userData.seenExamples[exampleId] = true;
-            starEl.classList.toggle("seen", !cur);
-            saveUserData();
-            applyViewAllFilters();
+            body.appendChild(itemEl);
           });
 
-          const toggleEl = itemEl.querySelector(".viewall-toggle");
-          const headerEl = itemEl.querySelector(".viewall-item-header");
-          function setOpen(open){
-            notes.section.hidden = !open;
-            toggleEl.textContent = open ? "－" : "＋";
-            toggleEl.classList.toggle("open", open);
-          }
-          headerEl.addEventListener("click", () => setOpen(notes.section.hidden));
+          section.appendChild(body);
+          viewAllContent.appendChild(section);
+        }
 
-          body.appendChild(itemEl);
-        });
-
-        section.appendChild(body);
-        viewAllContent.appendChild(section);
+        // make sure scores apply immediately
+        document.body.classList.toggle("no-scores", !scoresEnabled);
       }
-    }
 
-    // View all: search filters
-    let searchTimer = null;
-    viewAllSearch.addEventListener("input", () => {
-      if (searchTimer) clearTimeout(searchTimer);
-      searchTimer = setTimeout(applyViewAllFilters, 80);
+      // View all: search filter
+      let searchTimer = null;
+      viewAllSearch.addEventListener("input", () => {
+        if (searchTimer) clearTimeout(searchTimer);
+        searchTimer = setTimeout(applyViewAllFilters, 80);
+      });
+
+      viewAllFilterSeenBtn.addEventListener("click", () => {
+        viewAllStarFilter = (viewAllStarFilter === "seen") ? null : "seen";
+        updateViewAllFilterUI();
+        applyViewAllFilters();
+      });
+      viewAllFilterUnseenBtn.addEventListener("click", () => {
+        viewAllStarFilter = (viewAllStarFilter === "unseen") ? null : "unseen";
+        updateViewAllFilterUI();
+        applyViewAllFilters();
+      });
+
+      // ------------------------------- Study Log wiring -------------------------------
+      loadHeatmapState();
+      applyHeatmapPalette();
+      applyHeatmapVisibility();
+      applyHeatmapStatsUI();
+      renderPaletteOptions();
+
+      toggleHeatmapVisible.checked = !!heatmapState.visible;
+      toggleHeatmapVisible.addEventListener("change", () => {
+        heatmapState.visible = !!toggleHeatmapVisible.checked;
+        saveHeatmapState();
+        applyHeatmapVisibility();
+        if (heatmapState.visible){
+          renderHeatmapStats();
+          renderHeatmap();
+        }
+      });
+
+      // Open heatmap settings
+      function openHeatmapSettings(){
+        heatmapSettingsModalBackdrop.classList.add("show");
+      }
+      function closeHeatmapSettings(){
+        heatmapSettingsModalBackdrop.classList.remove("show");
+      }
+      openHeatmapSettingsBtn.addEventListener("click", openHeatmapSettings);
+      closeHeatmapSettingsBtn.addEventListener("click", closeHeatmapSettings);
+      heatmapSettingsModalBackdrop.addEventListener("click", (ev) => {
+        if (ev.target === heatmapSettingsModalBackdrop) closeHeatmapSettings();
+      });
+
+      // heatmap settings toggles
+      hmShowFirstVisit.addEventListener("change", () => {
+        heatmapState.showFirstVisit = !!hmShowFirstVisit.checked;
+        saveHeatmapState();
+        applyHeatmapStatsUI();
+      });
+      hmShowStreak.addEventListener("change", () => {
+        heatmapState.showStreak = !!hmShowStreak.checked;
+        saveHeatmapState();
+        applyHeatmapStatsUI();
+      });
+      hmShowTotal.addEventListener("change", () => {
+        heatmapState.showTotal = !!hmShowTotal.checked;
+        saveHeatmapState();
+        applyHeatmapStatsUI();
+      });
+      hmShowMonthTitles.addEventListener("change", () => {
+        heatmapState.showMonthTitles = !!hmShowMonthTitles.checked;
+        saveHeatmapState();
+        renderHeatmap();
+      });
+
+      // Year navigation
+      hmPrevYearBtn.addEventListener("click", () => {
+        heatmapState.viewYear = Number(heatmapState.viewYear || new Date().getFullYear()) - 1;
+        saveHeatmapState();
+        renderHeatmap();
+      });
+      hmNextYearBtn.addEventListener("click", () => {
+        heatmapState.viewYear = Number(heatmapState.viewYear || new Date().getFullYear()) + 1;
+        saveHeatmapState();
+        renderHeatmap();
+      });
+
+      // Refit on resize (no horizontal scrollbars)
+      window.addEventListener("resize", () => {
+        if (heatmapState.visible) renderHeatmap();
+      });
+
+      // IMPORTANT: record visit ONLY on real current-day page load (not date picker browsing)
+      recordTodayVisit();
+      saveHeatmapState();
+
+      if (heatmapState.visible){
+        renderHeatmapStats();
+        renderHeatmap();
+      } else {
+        renderHeatmapStats(); // safe
+      }
+
+      // ------------------------------- Final init -------------------------------
+      updateFilterButtons();
+      setScoresEnabled(scoresEnabled);
+      render();
+
+      // Also update stats after initial recordTodayVisit
+      renderHeatmapStats();
     });
-
-    // Star filter toggles
-    viewAllFilterSeenBtn.addEventListener("click", () => {
-      viewAllStarFilter = (viewAllStarFilter === "seen") ? null : "seen";
-      updateViewAllFilterUI();
-      applyViewAllFilters();
-    });
-    viewAllFilterUnseenBtn.addEventListener("click", () => {
-      viewAllStarFilter = (viewAllStarFilter === "unseen") ? null : "unseen";
-      updateViewAllFilterUI();
-      applyViewAllFilters();
-    });
-
-    // Close tooltip on scroll/resize so it never feels “stuck”
-    window.addEventListener("scroll", hideTooltip, { passive:true });
-    window.addEventListener("resize", () => {
-      if (hmTooltip.classList.contains("show")) positionTooltipAt(lastPointer.x, lastPointer.y);
-    }, { passive:true });
-
-    // ---------- init ----------
-    updateFilterButtons();
-    render();
-  });
-</script>
+  </script>
 </body>
 </html>
